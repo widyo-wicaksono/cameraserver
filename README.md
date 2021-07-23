@@ -25,4 +25,4 @@ Requirements:
 
 Webcam DEMO
 
-https://www.youtube.com/embed/ybRvi3fbMg0
+https://youtu.be/ybRvi3fbMg0
