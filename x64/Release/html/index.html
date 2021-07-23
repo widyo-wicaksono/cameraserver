@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html>
+	<head><meta charset="utf-8"/></head>
+	<title>Camera Control</title>
+	<style>
+		* {
+		  box-sizing: border-box;
+		}
+
+		.img-container {
+		  float: left;
+		  width: 300px;
+		  padding: 5px;
+		}
+
+		.clearfix::after {
+		  content: "";
+		  clear: both;
+		  display: table;
+		}
+		.box {
+			border-radius: 25px;
+			border: 2px solid aquamarine;
+			padding:10px;
+			float:left;
+			margin:10px;
+		}
+		
+		body {
+			color:white;
+			background-color: black;
+			font-family:"segoe ui";
+			
+		}
+		
+		div h2{
+			text-align: center;
+			margin-top: -30px;
+		}
+
+		div h2 span{
+			background-color: black;
+		}
+	</style>
+	<body>
+	
+	
+	<h1>Camera Platform Server Mock UI</h1>
+	
+
+	<div class="box">
+		<h2><span>Livestream</span></h2>
+		<div id="videoframes"></div>
+	<br/>
+		<h2><span>Photos</span></h2>
+		<div id="photos"></div>
+	<br/>
+		<h2><span>Log</span></h2>
+		<div id="result"></div>
+	</div>
+	
+	
+	<div>
+		<div class="box">
+			<h2><span>Webcam Control</span></h2>
+			Webcam Index : <input id="WebCamID" type="text" value="0"/> <br/><br/>
+			<button type='button' onclick="sendCommandCreateWebcam01();">Activate Webcam</button>
+			<button type='button' onclick="sendStartLiveViewWebcam01();">Start LiveView Webcam</button>
+			<button type='button' onclick="sendStopLiveViewWebcam01();">Stop LiveView Webcam</button>		
+			<button type='button' onclick="sendCapturePhotoWebcam01();">Capture Photo Webcam</button>			
+		</div>
+		<div class="box">
+			<h2><span>IPCam Control</span></h2>
+			<!--input id="RTSPAddress" type="text" size="60" value="rtsp://admin:camera123@192.168.100.5:554/onvif1"/> <br/><br/-->
+			RTSP Address : <input id="RTSPAddress" type="text" size="60" value="http://192.168.0.24/videostream.cgi"/> <br/><br/>
+			<button type='button' onclick="sendCommandCreateIPCam01();">Activate IPCam</button>			
+			<button type='button' onclick="sendStartLiveViewIPCam01();">Start LiveView IPCam</button>
+			<button type='button' onclick="sendStopLiveViewIPCam01();">Stop LiveView IPCam</button>		
+			<button type='button' onclick="sendCapturePhotoIPCam01();">Capture Photo IPCam</button>	
+		</div>
+		
+		<div class="box">
+			<h2><span>Canon DSLR Control</span></h2>		
+			<button type='button' onclick="sendCommandCreateDSLR01();">Activate DSLR</button>			
+			<button type='button' onclick="sendStartLiveViewDSLR01();">Start LiveView DSLR</button>
+			<button type='button' onclick="sendStopLiveViewDSLR01();">Stop LiveView DSLR</button>				
+			<button type='button' onclick="sendCapturePhotoDSLR01();">Capture Photo DSLR</button>			
+			<button type='button' onclick="sendCaptureContinuousPhotoDSLR01();">Continuous Photos DSLR</button>	
+			<button type='button' onclick="sendCaptureBurstPhotoDSLR01();">Burst Photos DSLR</button>			
+		</div>
+		
+		<div class="box">
+			<h2><span>Filter Control</span></h2>	
+			<button type='button' id="addeffectcool" onclick="sendCommandAddEffectCool();">Add Cool Filter</button>			
+			<button type='button' id="removeffectcool" onclick="sendCommandRemoveEffectCool();">Remove Cool Filter</button>			
+		</div>
+		
+		<div class="box">
+			<h2><span>Greenscreen Control</span></h2>
+			<button type='button' onclick="sendCommandAddBGRemoval01();">Remove Background</button>			
+			<button type='button' onclick="sendCommandRemoveBGRemoval01();">Restore Background</button>	
+		</div>
+		
+		<!--
+		<button type='button' id="getrgblimit" onclick="sendCommandGetRGBLimit();">Get RGB Limit</button>	
+		<button type='button' id="getrgblimit" onclick="sendCommandGenerateBGModel();">Create BG Model</button>	
+		<br/>
+		<br/>
+		-->
+		<div class="box">
+			<h2><span>Frame Control</span></h2>
+			Frame Index : <input id="FrameID" type="text" value="frame01"/> <br/><br/>
+			<button type='button' onclick="sendCommandAddFrame01();">Add Frame</button>			
+			<button type='button' onclick="sendCommandRemoveFrame01();">Remove Frame</button>		
+		</div>
+		<div class="box">
+			<h2><span>Sticker Control</span></h2>
+			Layer Order : <input id="StackIndexAcc" type="text" value="70"/> <br/><br/>
+			Sticker Name : <input id="Acc01Name" type="text" value="3.png"/> <br/><br/>
+			<button type='button' onclick="sendCommandAddAcc01();">Activate Sticker</button>
+			<button type='button' onclick="sendCommandRemoveAcc01();">Deactivate Sticker</button>
+		</div>
+		
+		<div class="clearfix" style="border-radius: 25px;border: 2px solid aquamarine;padding:10px;float:left;margin:10px;">
+			<h2><span>Dynamic Layer Control</span></h2>
+			<div class="img-container">
+				File Name : <input id="FileNameCustomIndex01" type="text" value="girl_720.mov"/> <br/><br/>
+				Layer Order : <input id="StackIndex01" type="text" value="51"/> <br/><br/>
+				
+				<button type='button' onclick="sendCommandAddDynFrameWithCustomIndex01();">Add Dynamic 01</button>			
+				<button type='button' onclick="sendCommandRemoveDynFrameWithCustomIndex01();">Remove Dynamic 01</button>	
+			</div>
+			<div class="img-container">
+				File Name : <input id="FileNameCustomIndex02" type="text" value="test_720.mov"/> <br/><br/>
+				Layer Order : <input id="StackIndex02" type="text" value="52"/> <br/><br/>
+				
+				<button type='button' onclick="sendCommandAddDynFrameWithCustomIndex02();">Add Dynamic 02</button>			
+				<button type='button' onclick="sendCommandRemoveDynFrameWithCustomIndex02();">Remove Dynamic 02</button>	
+			</div>			
+			<div class="img-container">
+				File Name : <input id="FileNameCustomIndex03" type="text" value="flower.mov"/> <br/><br/>
+				Layer Order : <input id="StackIndex03" type="text" value="53"/> <br/><br/>
+				
+				<button type='button' onclick="sendCommandAddDynFrameWithCustomIndex03();">Add Dynamic 03</button>			
+				<button type='button' onclick="sendCommandRemoveDynFrameWithCustomIndex03();">Remove Dynamic 03</button>				
+			</div>
+			<div class="img-container">
+				File Name : <input id="FileNameCustomIndex04" type="text" value="explode.mov"/> <br/><br/>
+				Layer Order : <input id="StackIndex04" type="text" value="54"/> <br/><br/>
+				
+				<button type='button' onclick="sendCommandAddDynFrameWithCustomIndex04();">Add Dynamic 04</button>			
+				<button type='button' onclick="sendCommandRemoveDynFrameWithCustomIndex04();">Remove Dynamic 04</button>	
+			</div>
+		</div>
+		<br/>
+
+		<div  class="clearfix" style="border-radius: 25px;border: 2px solid aquamarine;padding:10px;float:left;margin:10px;">
+			<h2><span>Dynamic Background Control</span></h2>
+			<div class="img-container">
+				<input id="FileNameBG" type="text" value="layer 3.mp4"/> <br/><br/>		
+				<button type='button' onclick="sendCommandAddDynBG();">Add Dynamic BG</button>			
+				<button type='button' onclick="sendCommandRemoveBGRemoval01();">Remove Dynamic BG</button>	
+			</div>
+		</div>
+		<br/>
+		
+		<div  class="clearfix" style="border-radius: 25px;border: 2px solid aquamarine;padding:10px;float:left;margin:10px;">
+			<h2><span>Video Recording</span></h2>
+			<button type='button' id="startrecordingmovie" onclick="startRecordingMovie01();">Start Recording Liveview Movie 01</button>		
+			<button type='button' id="generatemovie" onclick="sendCommandGenerateMovie01();">Generate Liveview Movie 01</button>		
+		</div>
+		<br/>
+		<br/>
+		
+		<!--
+		<input id="Broadcast" type="text" name="FirstName" size="60" value="BROADCAST DATA"/> <br/><br/>
+		<button type='button' id="broadcast" onclick="sendCommandBroadacast();">Broadcast</button>			
+		-->
+	</div>
+	<br/>
+	
+	<script>
+		var g_connection;			
+		var u = document.URL;
+		
+		function getOriginalURL(port){
+			var s = u.split(":");
+			s = s[0] + ":" + s[1] + ":" + port;
+			return s;
+		}
+			
+		function log(command, data){
+			var br = document.createElement("br");
+			document.getElementById("result").appendChild(br);
+			var s = document.getElementById("result").innerHTML;
+			document.getElementById("result").innerHTML = s + command + " " + data;	
+		}
+			
+		if (typeof MozWebSocket != "undefined") {
+			g_connection = new MozWebSocket("ws://" + u.substr(7), "client-protocol");
+		} 
+		else {
+			g_connection = new WebSocket("ws://" + u.substr(7), "client-protocol");
+		}
+		
+		function sendCommandAddAcc01(){
+			data = '{"command id": "00001", "command":"addAccesoriesWithCustomIndex", "media type":"dummy", "id":"'+ document.getElementById("Acc01Name").value +'", "confidence":75, "size":50, "stack index":'+ document.getElementById("StackIndexAcc").value +'}';			
+			g_connection.send(data);
+		}
+		
+		function sendCommandRemoveAcc01(){
+			data = '{"command id": "00001", "command":"removeAccesoriesCustomIndex", "media type":"dummy", "id":"-1" , "stack index":'+document.getElementById("StackIndexAcc").value+'}';
+			g_connection.send(data);
+		}
+		function sendCommandGenerateBGModel(){
+			data = '{"command id": "00001", "command":"generateBGModel", "media type":"dummy", "id":"-1", "data":""}';			
+			g_connection.send(data);
+		}
+		
+		function sendCommandGetRGBLimit(){
+			data = '{"command id": "00001", "command":"getRGBLimit", "media type":"dummy", "id":"-1", "data":""}';			
+			g_connection.send(data);
+		}
+		
+		function startRecordingMovie01(){
+			data = '{"command id": "00001", "command":"startLiveviewMovieRecording", "media type":"dummy", "id":"-1", "data":""}';			
+			g_connection.send(data);
+		}
+		
+		function sendCommandGenerateMovie01(){
+			data = '{"command id": "00001", "command":"generateLiveviewMovie", "fps":25, "duration":10, "media type":"dummy", "id":"-1", "data":""}';			
+			g_connection.send(data);
+		}
+		
+		function sendCommandBroadacast(){
+			data = '{"command id": "00001", "command":"broadcast", "data":"'+ document.getElementById("Broadcast").value +  '"}';			
+			g_connection.send(data);
+		}
+		function sendCommandAddEffectCool(){
+			data = '{"command id": "00001", "command":"addFilter", "media type":"dummy", "filter name" : "Colormap Hot", "id":"-1" }'
+			g_connection.send(data);
+		}
+		
+		function sendCommandRemoveEffectCool(){
+			data = '{"command id": "00001", "command":"removeFilter", "media type":"dummy", "filter name" : "Colormap Hot", "id":"-1" }';
+			g_connection.send(data);
+		}
+		
+		function sendCommandAddFrame01(){
+			data = '{"command id": "00001", "command":"addFrame", "media type":"dummy", "frame name" : "' + document.getElementById("FrameID").value +'", "id":"-1" }'
+			g_connection.send(data);
+		}
+		function sendCommandAddBGRemoval01(){
+			data = '{"command id": "00001", "command":"addBGRemoval", "media type":"dummy", "name" : "test.jpg", "id":"-1", "RL":0, "GL":255, "BL":0, "RH":10, "GH":255, "BH":0, "static":true }'
+			g_connection.send(data);
+		}
+		function sendCommandAddDynFrame01(){
+			data = '{"command id": "00001", "command":"addDynamicFrame", "media type":"dummy", "file name" : "' + document.getElementById("FileName").value +' ", "id":"-1", "mode" :"alpha"  }'
+			g_connection.send(data);
+		}
+		
+		function sendCommandAddDynFrameWithCustomIndex01(){			
+			data = '{"command id": "00001", "command":"addDynamicFrameWithCustomIndex", "media type":"dummy", "file name" : "' + document.getElementById("FileNameCustomIndex01").value +' ",  "stack index":' + document.getElementById("StackIndex01").value +', "id":"-1", "mode" :"alpha", "render mode":"software", "width":1280, "height":720  }'
+			g_connection.send(data);
+		}
+		
+		function sendCommandAddDynFrameWithCustomIndex02(){			
+			data = '{"command id": "00001", "command":"addDynamicFrameWithCustomIndex", "media type":"dummy", "file name" : "' + document.getElementById("FileNameCustomIndex02").value +' ",  "stack index":' + document.getElementById("StackIndex02").value +', "id":"-1", "mode" :"alpha" ,"render mode":"software", "width":1280, "height":720 }'
+			g_connection.send(data);
+		}
+		
+		function sendCommandAddDynFrameWithCustomIndex03(){			
+			data = '{"command id": "00001", "command":"addDynamicFrameWithCustomIndex", "media type":"dummy", "file name" : "' + document.getElementById("FileNameCustomIndex03").value +' ",  "stack index":' + document.getElementById("StackIndex03").value +', "id":"-1", "mode" :"alpha" ,"render mode":"software", "width":1280, "height":720, "repeat":true }'
+			g_connection.send(data);
+		}
+		
+		function sendCommandAddDynFrameWithCustomIndex04(){			
+			data = '{"command id": "00001", "command":"addDynamicFrameWithCustomIndex", "media type":"dummy", "file name" : "' + document.getElementById("FileNameCustomIndex04").value +' ",  "stack index":' + document.getElementById("StackIndex04").value +', "id":"-1", "mode" :"greenscreen" ,"render mode":"software", "width":1280, "height":720 , "RL":0, "GL":200, "BL":15, "RH":20, "GH":255, "BH":30 }'
+			g_connection.send(data);
+		}
+		
+		function sendCommandAddDynBG(){						
+			data = '{"command id": "00001", "command":"addBGRemoval", "media type":"dummy", "name" : "' + document.getElementById("FileNameBG").value +'", "id":"-1", "RL":61, "GL":0, "BL":0, "RH":255, "GH":81, "BH":89, "static":false, "width":1280, "height":720, "repeat":true, "greenscreen":false}'
+			g_connection.send(data);
+						
+		}
+		
+		function sendCommandRemoveFrame01(){
+			data = '{"command id": "00001", "command":"removeFrame", "media type":"dummy", "id":"-1" }';
+			g_connection.send(data);
+		}
+		function sendCommandRemoveBGRemoval01(){
+			//window.alert("sometext");
+			data = '{"command id": "00001", "command":"removeBGRemoval", "media type":"dummy", "id":"-1" }';
+			g_connection.send(data);
+		}
+		
+			
+		function sendCommandRemoveDynFrame01(){
+			data = '{"command id": "00001", "command":"removeDynamicFrame", "media type":"dummy", "id":"-1" }';
+			g_connection.send(data);
+		}
+		
+		function sendCommandRemoveDynFrameWithCustomIndex01(){
+			data = '{"command id": "00001", "command":"removeDynamicFrameWithCustomIndex", "stack index":' + document.getElementById("StackIndex01").value +', "media type":"dummy", "id":"-1" }';
+			g_connection.send(data);
+		}
+		
+		function sendCommandRemoveDynFrameWithCustomIndex02(){
+			data = '{"command id": "00001", "command":"removeDynamicFrameWithCustomIndex", "stack index":' + document.getElementById("StackIndex02").value +', "media type":"dummy", "id":"-1" }';
+			g_connection.send(data);
+		}
+		
+		function sendCommandRemoveDynFrameWithCustomIndex03(){
+			data = '{"command id": "00001", "command":"removeDynamicFrameWithCustomIndex", "stack index":' + document.getElementById("StackIndex03").value +', "media type":"dummy", "id":"-1" }';
+			g_connection.send(data);
+		}
+		
+		function sendCommandRemoveDynFrameWithCustomIndex04(){
+			data = '{"command id": "00001", "command":"removeDynamicFrameWithCustomIndex", "stack index":' + document.getElementById("StackIndex04").value +', "media type":"dummy", "id":"-1" }';
+			g_connection.send(data);
+		}
+		
+		function sendCommandCreateWebcam01(){
+			data = '{"command id": "00001", "command":"createNewMediaSource", "media type":"webcam", "id":"' + document.getElementById("WebCamID").value + '", "landscape":true, "width":1280, "height":720 }';
+			g_connection.send(data);
+		}
+		
+		function sendCommandCreateIPCam01(){				 
+			data = '{"command id": "00001", "command":"createNewMediaSource", "media type":"ipcam", "id":"'+ document.getElementById("RTSPAddress").value +  '"}';			
+			g_connection.send(data);
+		}
+		function sendCommandCreateDSLR01(){				 
+			data = '{"command id": "00001", "command":"createNewMediaSource", "media type":"dslr", "id":"CANON", "landscape":true, "width":-1, "height":-1}';
+			g_connection.send(data);
+		}
+		
+		
+		function sendStartLiveViewWebcam01(){
+			data = '{"command id": "00002", "command":"startLiveView", "media type":"webcam", "id":"' + document.getElementById("WebCamID").value + '", "fps":true, "scale":0.75 }';
+			g_connection.send(data);			
+		}
+		
+		function sendStartLiveViewIPCam01(){
+			data = '{"command id": "00002", "command":"startLiveView", "media type":"ipcam", "id":"'+ document.getElementById("RTSPAddress").value +  '"}';
+			g_connection.send(data);			
+		}
+		
+		function sendStartLiveViewDSLR01(){
+			data = '{"command id": "00002", "command":"startLiveView", "media type":"dslr", "id":"CANON", "fps":true, "scale":0.5}';
+			g_connection.send(data);			
+		}
+					
+		function sendStopLiveViewWebcam01(){
+			data = '{"command id": "00003", "command":"stopLiveView", "media type":"webcam", "id":"' + document.getElementById("WebCamID").value + '" }';
+			g_connection.send(data);
+			
+			var img = document.getElementById("videostream");
+			document.getElementById("videoframes").removeChild(img);
+		}
+		
+		function sendStopLiveViewIPCam01(){
+			data = '{"command id": "00003", "command":"stopLiveView", "media type":"ipcam", "id":"'+ document.getElementById("RTSPAddress").value +  '"}';
+			g_connection.send(data);
+			
+			var img = document.getElementById("videostream");
+			document.getElementById("videoframes").removeChild(img);
+		}
+		
+		function sendStopLiveViewDSLR01(){
+			data = '{"command id": "00003", "command":"stopLiveView", "media type":"dslr", "id":"CANON"}';
+			g_connection.send(data);
+			
+			var img = document.getElementById("videostream");
+			document.getElementById("videoframes").removeChild(img);
+		}
+		
+		
+		function sendCapturePhotoWebcam01(){
+			data = '{"command id": "00004", "command":"capturePhoto", "media type":"webcam", "id":"' + document.getElementById("WebCamID").value + '" }';
+			g_connection.send(data);			
+		}
+		
+		function sendCapturePhotoIPCam01(){
+			data = '{"command id": "00004", "command":"capturePhoto", "media type":"ipcam", "id":"'+ document.getElementById("RTSPAddress").value +  '"}';
+			g_connection.send(data);			
+		}
+		
+		function sendCapturePhotoDSLR01(){
+			data = '{"command id": "00004", "command":"capturePhoto", "media type":"dslr", "id":"CANON"}';
+			g_connection.send(data);			
+		}
+
+		function sendCaptureContinuousPhotoDSLR01(){
+			data = '{"command id": "00004", "command":"captureContinuousPhotos", "media type":"dslr", "id":"CANON", "photo count":3}';
+			g_connection.send(data);			
+		}
+		
+		function sendCaptureBurstPhotoDSLR01(){
+			data = '{"command id": "00004", "command":"captureBurstPhotos", "media type":"dslr", "id":"CANON", "photo count":20, "duration":5000, "video":true, "width":800, "height":600}';
+			g_connection.send(data);			
+		}
+		
+		try{
+			g_connection.onopen = function() {	
+				log("Connected", "");				
+			}
+			g_connection.onclose = function(){			
+				log("Diconnected", "");
+			}
+			g_connection.onmessage = function got_packet(msg){			
+				log(msg.data, "");
+				
+				var obj = JSON.parse(msg.data);
+				if(obj.command == "startLiveView"){
+					if(obj.result == "OK"){
+						var img = document.getElementById("videostream");
+						if(img!=null){
+							document.getElementById("videoframes").removeChild(img);						
+						}
+						img = document.createElement("img");
+						img.id = "videostream";
+						img.src = getOriginalURL(obj.data);
+						document.getElementById("videoframes").appendChild(img);
+					}					
+				}				
+				else if(obj.command == "capturePhoto"){
+					var photo = document.getElementById("photo");						
+					if(photo==null){
+						photo = document.createElement("img");
+					}
+					
+					document.getElementById("photos").appendChild(photo);					
+					photo.width = 300;
+					photo.height = 200;
+					photo.src = getOriginalURL("7681") + "/" + obj.data;
+				}
+			}
+		}			
+		catch(exception) {
+			alert('<p>Error' + exception); 				
+		}
+	</script>
+	</body>
+</html>

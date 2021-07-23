@@ -1,0 +1,52 @@
+[22:49:56:908]Camera Platform Server Ver. 0.0.1
+[22:49:56:911]=================================
+[22:49:56:914]Initiating ...
+[22:49:56:916]Done
+[22:49:56:918]Getting ready to accept connections ...
+[22:49:56:923]Done
+[22:49:56:968]Websocket Server is running
+[22:50:11:456]New Connection inbound[0xc1b183f0]
+[22:50:11:461]Frame Control [0xc1b183f0] is created
+[22:50:11:468]Frame Control [0xc1b183f0] is running
+[22:50:14:029]Frame Control [0xc1b183f0] is destroyed
+[22:50:14:033]Connection Terminated [0xc1b183f0]
+[22:50:14:055]New Connection inbound[0xc1b183f0]
+[22:50:14:060]Frame Control [0xc1b183f0] is created
+[22:50:14:067]Frame Control [0xc1b183f0] is running
+[22:50:23:653]Frame Control [0xc1b183f0] is destroyed
+[22:50:23:656]Connection Terminated [0xc1b183f0]
+[22:50:23:699]New Connection inbound[0xc1b183f0]
+[22:50:23:706]Frame Control [0xc1b183f0] is created
+[22:50:23:716]Frame Control [0xc1b183f0] is running
+[22:50:36:994]Frame Control [0xc1b183f0] is destroyed
+[22:50:36:997]Connection Terminated [0xc1b183f0]
+[22:53:53:686]Camera Platform Server Ver. 0.0.1
+[22:53:53:690]=================================
+[22:53:53:692]Initiating ...
+[22:53:53:693]Done
+[22:53:53:696]Getting ready to accept connections ...
+[22:53:53:700]Done
+[22:53:53:773]Websocket Server is running
+[22:54:11:169]New Connection inbound[0x03727910]
+[22:54:11:174]Frame Control [0x03727910] is created
+[22:54:11:186]Frame Control [0x03727910] is running
+[22:54:48:412]Camera Platform Server Ver. 0.0.1
+[22:54:48:416]=================================
+[22:54:48:419]Initiating ...
+[22:54:48:421]Done
+[22:54:48:424]Getting ready to accept connections ...
+[22:54:48:428]Done
+[22:54:48:464]Websocket Server is running
+[22:54:53:888]New Connection inbound[0xe8e7cb70]
+[22:54:53:895]Frame Control [0xe8e7cb70] is created
+[22:54:53:901]Frame Control [0xe8e7cb70] is running
+[22:54:54:903]Frame Control [0xe8e7cb70] is destroyed
+[22:54:54:908]Connection Terminated [0xe8e7cb70]
+[22:54:54:933]New Connection inbound[0xe8e7cb70]
+[22:54:54:936]Frame Control [0xe8e7cb70] is created
+[22:54:54:941]Frame Control [0xe8e7cb70] is running
+[22:55:00:647]Frame Control [0xe8e7cb70] is destroyed
+[22:55:00:651]Connection Terminated [0xe8e7cb70]
+[22:55:02:587]New Connection inbound[0xe8e7cb70]
+[22:55:02:593]Frame Control [0xe8e7cb70] is created
+[22:55:02:598]Frame Control [0xe8e7cb70] is running

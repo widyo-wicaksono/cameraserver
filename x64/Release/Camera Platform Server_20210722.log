@@ -1,0 +1,202 @@
+[16:36:58:577]Camera Platform Server Ver. 0.0.1
+[16:36:58:579]=================================
+[16:36:58:580]Initiating ...
+[16:36:58:582]Done
+[16:36:58:583]Getting ready to accept connections ...
+[16:36:58:584]Done
+[16:36:58:602]Websocket Server is running
+[16:37:08:868]New Connection inbound[0xc6a9cbe0]
+[16:37:08:873]Frame Control [0xc6a9cbe0] is created
+[16:37:08:879]Frame Control [0xc6a9cbe0] is running
+[16:37:11:028]{"command id": "00001", "command":"createNewMediaSource", "media type":"webcam", "id":"0", "landscape":true, "width":1280, "height":720 }
+[16:37:11:035]Frame Control [0xc6a9cbe0] Processing command createNewMediaSource
+[16:37:11:038]Frame Control [0xc6a9cbe0] Processing data {"command id": "00001", "command":"createNewMediaSource", "media type":"webcam", "id":"0", "landscape":true, "width":1280, "height":720 }
+[16:37:11:040]Frame Control [0xc6a9cbe0] No existing media sources [webcam] found, creating new ...
+[16:37:11:042]Media Source Webcam[0] created
+[16:37:11:044]Done
+[16:37:13:840]{"command id": "00002", "command":"startLiveView", "media type":"webcam", "id":"0", "fps":true, "scale":0.75 }
+[16:37:13:853]Frame Control [0xc6a9cbe0] Processing command startLiveView
+[16:37:13:856]Frame Control [0xc6a9cbe0] Processing data {"command id": "00002", "command":"startLiveView", "media type":"webcam", "id":"0", "fps":true, "scale":0.75 }
+[16:37:13:859]Media Server created
+[16:37:13:861]Socket is listening ...
+[16:37:15:664]Connection accepted
+[16:37:15:666]Header reply part 1 sent!
+[16:37:15:668]Header reply part 2 sent!
+[16:37:15:698]Connection accepted
+[16:37:15:700]Header reply part 1 sent!
+[16:37:15:702]Header reply part 2 sent!
+[16:37:20:419]Error in sending header data
+[16:37:20:422]Error in sending data, shutting down connection
+[16:37:37:035]{"command id": "00004", "command":"capturePhoto", "media type":"webcam", "id":"0" }
+[16:37:37:038]Frame Control [0xc6a9cbe0] Processing command capturePhoto
+[16:37:37:040]Frame Control [0xc6a9cbe0] Processing data {"command id": "00004", "command":"capturePhoto", "media type":"webcam", "id":"0" }
+[16:38:45:652]Camera Platform Server Ver. 0.0.1
+[16:38:45:654]=================================
+[16:38:45:655]Initiating ...
+[16:38:45:658]Done
+[16:38:45:664]Getting ready to accept connections ...
+[16:38:45:666]Done
+[16:38:45:682]Websocket Server is running
+[16:38:50:131]New Connection inbound[0x08c47c10]
+[16:38:50:135]Frame Control [0x08c47c10] is created
+[16:38:50:137]Frame Control [0x08c47c10] is running
+[16:38:52:411]{"command id": "00001", "command":"createNewMediaSource", "media type":"webcam", "id":"0", "landscape":true, "width":1280, "height":720 }
+[16:38:52:429]Frame Control [0x08c47c10] Processing command createNewMediaSource
+[16:38:52:432]Frame Control [0x08c47c10] Processing data {"command id": "00001", "command":"createNewMediaSource", "media type":"webcam", "id":"0", "landscape":true, "width":1280, "height":720 }
+[16:38:52:434]Frame Control [0x08c47c10] No existing media sources [webcam] found, creating new ...
+[16:38:52:435]Media Source Webcam[0] created
+[16:38:52:437]Done
+[16:38:53:318]{"command id": "00002", "command":"startLiveView", "media type":"webcam", "id":"0", "fps":true, "scale":0.75 }
+[16:38:53:321]Frame Control [0x08c47c10] Processing command startLiveView
+[16:38:53:325]Frame Control [0x08c47c10] Processing data {"command id": "00002", "command":"startLiveView", "media type":"webcam", "id":"0", "fps":true, "scale":0.75 }
+[16:38:53:327]Media Server created
+[16:38:53:330]Socket is listening ...
+[16:38:54:992]Connection accepted
+[16:38:54:995]Header reply part 1 sent!
+[16:38:54:998]Header reply part 2 sent!
+[16:38:55:032]Connection accepted
+[16:38:55:034]Header reply part 1 sent!
+[16:38:55:035]Header reply part 2 sent!
+[16:39:00:607]Error in sending header data
+[16:39:00:611]Error in sending data, shutting down connection
+[16:39:16:881]{"command id": "00001", "command":"addFilter", "media type":"dummy", "filter name" : "Colormap Hot", "id":"-1" }
+[16:39:16:886]Frame Control [0x08c47c10] Processing command addFilter
+[16:39:16:890]Frame Control [0x08c47c10] Processing data {"command id": "00001", "command":"addFilter", "media type":"dummy", "filter name" : "Colormap Hot", "id":"-1" }
+[16:39:16:893]Effect [Colormap Hot] created
+[16:39:20:090]{"command id": "00001", "command":"addFrame", "media type":"dummy", "frame name" : "frame01", "id":"-1" }
+[16:39:20:096]Frame Control [0x08c47c10] Processing command addFrame
+[16:39:20:099]Frame Control [0x08c47c10] Processing data {"command id": "00001", "command":"addFrame", "media type":"dummy", "frame name" : "frame01", "id":"-1" }
+[16:39:20:101]Effect [frame01] created
+[16:41:14:573]Camera Platform Server Ver. 0.0.1
+[16:41:14:578]=================================
+[16:41:14:581]Initiating ...
+[16:41:14:583]Done
+[16:41:14:585]Getting ready to accept connections ...
+[16:41:14:587]Done
+[16:41:14:602]Websocket Server is running
+[16:41:20:393]New Connection inbound[0x52835c00]
+[16:41:20:395]Frame Control [0x52835c00] is created
+[16:41:20:397]Frame Control [0x52835c00] is running
+[16:41:24:792]{"command id": "00001", "command":"createNewMediaSource", "media type":"webcam", "id":"0", "landscape":true, "width":1280, "height":720 }
+[16:41:24:795]Frame Control [0x52835c00] Processing command createNewMediaSource
+[16:41:24:799]Frame Control [0x52835c00] Processing data {"command id": "00001", "command":"createNewMediaSource", "media type":"webcam", "id":"0", "landscape":true, "width":1280, "height":720 }
+[16:41:24:801]Frame Control [0x52835c00] No existing media sources [webcam] found, creating new ...
+[16:41:24:804]Media Source Webcam[0] created
+[16:41:24:807]Done
+[16:41:25:732]{"command id": "00002", "command":"startLiveView", "media type":"webcam", "id":"0", "fps":true, "scale":0.75 }
+[16:41:25:738]Frame Control [0x52835c00] Processing command startLiveView
+[16:41:25:741]Frame Control [0x52835c00] Processing data {"command id": "00002", "command":"startLiveView", "media type":"webcam", "id":"0", "fps":true, "scale":0.75 }
+[16:41:25:743]Media Server created
+[16:41:25:746]Socket is listening ...
+[16:41:27:444]Connection accepted
+[16:41:27:447]Header reply part 1 sent!
+[16:41:27:449]Header reply part 2 sent!
+[16:41:27:484]Connection accepted
+[16:41:27:486]Header reply part 1 sent!
+[16:41:27:488]Header reply part 2 sent!
+[16:41:50:105]Camera Platform Server Ver. 0.0.1
+[16:41:50:108]=================================
+[16:41:50:109]Initiating ...
+[16:41:50:111]Done
+[16:41:50:114]Getting ready to accept connections ...
+[16:41:50:116]Done
+[16:41:50:132]Websocket Server is running
+[16:41:55:063]New Connection inbound[0x68375c00]
+[16:41:55:066]Frame Control [0x68375c00] is created
+[16:41:55:069]Frame Control [0x68375c00] is running
+[16:43:32:048]Frame Control [0x68375c00] is destroyed
+[16:43:32:051]Connection Terminated [0x68375c00]
+[16:43:32:393]New Connection inbound[0x67f67520]
+[16:43:32:395]Frame Control [0x67f67520] is created
+[16:43:32:397]Frame Control [0x67f67520] is running
+[16:44:15:372]Frame Control [0x67f67520] is destroyed
+[16:44:15:375]Connection Terminated [0x67f67520]
+[16:44:15:745]New Connection inbound[0x67d7aea0]
+[16:44:15:747]Frame Control [0x67d7aea0] is created
+[16:44:15:750]Frame Control [0x67d7aea0] is running
+[16:44:15:760]Frame Control [0x67d7aea0] is destroyed
+[16:44:15:762]Connection Terminated [0x67d7aea0]
+[16:44:16:106]New Connection inbound[0x67d7aea0]
+[16:44:16:109]Frame Control [0x67d7aea0] is created
+[16:44:16:112]Frame Control [0x67d7aea0] is running
+[16:44:51:232]Frame Control [0x67d7aea0] is destroyed
+[16:44:51:235]Connection Terminated [0x67d7aea0]
+[16:44:51:589]New Connection inbound[0x68374310]
+[16:44:51:596]Frame Control [0x68374310] is created
+[16:44:51:606]Frame Control [0x68374310] is running
+[16:45:30:202]Frame Control [0x68374310] is destroyed
+[16:45:30:207]Connection Terminated [0x68374310]
+[16:45:30:562]New Connection inbound[0x683750b0]
+[16:45:30:569]Frame Control [0x683750b0] is created
+[16:45:30:583]Frame Control [0x683750b0] is running
+[16:45:46:600]{"command id": "00001", "command":"createNewMediaSource", "media type":"webcam", "id":"0", "landscape":true, "width":1280, "height":720 }
+[16:45:46:611]Frame Control [0x683750b0] Processing command createNewMediaSource
+[16:45:46:614]Frame Control [0x683750b0] Processing data {"command id": "00001", "command":"createNewMediaSource", "media type":"webcam", "id":"0", "landscape":true, "width":1280, "height":720 }
+[16:45:46:617]Frame Control [0x683750b0] No existing media sources [webcam] found, creating new ...
+[16:45:46:622]Media Source Webcam[0] created
+[16:45:46:624]Done
+[16:45:47:432]{"command id": "00002", "command":"startLiveView", "media type":"webcam", "id":"0", "fps":true, "scale":0.75 }
+[16:45:47:442]Frame Control [0x683750b0] Processing command startLiveView
+[16:45:47:446]Frame Control [0x683750b0] Processing data {"command id": "00002", "command":"startLiveView", "media type":"webcam", "id":"0", "fps":true, "scale":0.75 }
+[16:45:47:448]Media Server created
+[16:45:47:452]Socket is listening ...
+[16:45:49:162]Connection accepted
+[16:45:49:164]Header reply part 1 sent!
+[16:45:49:169]Header reply part 2 sent!
+[16:45:49:203]Connection accepted
+[16:45:49:205]Header reply part 1 sent!
+[16:45:49:209]Header reply part 2 sent!
+[16:45:56:255]Error in sending header data
+[16:45:56:258]Error in sending data, shutting down connection
+[18:11:13:128]Camera Platform Server Ver. 0.0.1
+[18:11:13:132]=================================
+[18:11:13:139]Initiating ...
+[18:11:13:143]Done
+[18:11:13:145]Getting ready to accept connections ...
+[18:11:13:147]Done
+[18:11:13:166]Websocket Server is running
+[18:11:22:519]New Connection inbound[0x872b7c10]
+[18:11:22:528]Frame Control [0x872b7c10] is created
+[18:11:22:540]Frame Control [0x872b7c10] is running
+[18:13:36:576]Frame Control [0x872b7c10] is destroyed
+[18:13:36:580]Connection Terminated [0x872b7c10]
+[18:13:36:945]New Connection inbound[0x86a6aad0]
+[18:13:36:956]Frame Control [0x86a6aad0] is created
+[18:13:36:968]Frame Control [0x86a6aad0] is running
+[18:15:12:472]Frame Control [0x86a6aad0] is destroyed
+[18:15:12:475]Connection Terminated [0x86a6aad0]
+[18:15:12:832]New Connection inbound[0x86a6aad0]
+[18:15:12:835]Frame Control [0x86a6aad0] is created
+[18:15:12:839]Frame Control [0x86a6aad0] is running
+[18:18:23:822]Frame Control [0x86a6aad0] is destroyed
+[18:18:23:825]Connection Terminated [0x86a6aad0]
+[18:18:24:186]New Connection inbound[0x86a6aad0]
+[18:18:24:195]Frame Control [0x86a6aad0] is created
+[18:18:24:209]Frame Control [0x86a6aad0] is running
+[18:18:57:318]Frame Control [0x86a6aad0] is destroyed
+[18:18:57:321]Connection Terminated [0x86a6aad0]
+[18:18:57:677]New Connection inbound[0x86a6aad0]
+[18:18:57:685]Frame Control [0x86a6aad0] is created
+[18:18:57:697]Frame Control [0x86a6aad0] is running
+[18:19:01:704]{"command id": "00001", "command":"createNewMediaSource", "media type":"webcam", "id":"0", "landscape":true, "width":1280, "height":720 }
+[18:19:01:716]Frame Control [0x86a6aad0] Processing command createNewMediaSource
+[18:19:01:719]Frame Control [0x86a6aad0] Processing data {"command id": "00001", "command":"createNewMediaSource", "media type":"webcam", "id":"0", "landscape":true, "width":1280, "height":720 }
+[18:19:01:723]Frame Control [0x86a6aad0] No existing media sources [webcam] found, creating new ...
+[18:19:01:727]Media Source Webcam[0] created
+[18:19:01:730]Done
+[18:19:03:665]{"command id": "00002", "command":"startLiveView", "media type":"webcam", "id":"0", "fps":true, "scale":0.75 }
+[18:19:03:678]Frame Control [0x86a6aad0] Processing command startLiveView
+[18:19:03:681]Frame Control [0x86a6aad0] Processing data {"command id": "00002", "command":"startLiveView", "media type":"webcam", "id":"0", "fps":true, "scale":0.75 }
+[18:19:03:683]Media Server created
+[18:19:03:686]Socket is listening ...
+[18:19:05:607]Connection accepted
+[18:19:05:611]Header reply part 1 sent!
+[18:19:05:614]Header reply part 2 sent!
+[18:19:05:632]Connection accepted
+[18:19:05:635]Header reply part 1 sent!
+[18:19:05:637]Header reply part 2 sent!
+[18:19:47:278]Frame Control [0x86a6aad0] is destroyed
+[18:19:47:867]Stream Thread [0] exiting ...
+[18:19:47:870]Media Source Webcam[0] destroyed
+[18:19:47:883]Media Server destroyed
+[18:19:47:886]Connection Terminated [0x86a6aad0]

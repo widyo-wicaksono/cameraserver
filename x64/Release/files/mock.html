@@ -1,0 +1,128 @@
+<html>
+	<body>
+		<h1>TESTER</h1>
+		<div id="videoframes">			
+		</div>
+		<br/><br/>
+		<button type='button' id="comphoto" onclick="sendCommandPhoto();">Photo</button>
+		<button type='button' id="comlive" onclick="sendCommandLive();">Live</button>
+		<button type='button' id="comstatus" onclick="sendCommandFeedStatus();">Livefeed Status</button>
+		<button type='button' id="comcamstatus" onclick="sendCommandCamStatus();">Cam Status</button>
+		<br/>
+		<br/>
+		<h3>Note : Prefix CAM_ adalah data yang dipush oleh server tanpa request</h3>
+		<div id="photos">			
+		</div>
+		<h3>Result</h3>		
+		<div id="result"></div>
+		<script>
+			var g_connection;			
+			var u = document.URL;
+			var last_command = "";
+			var isStreamActive = false;			
+			
+			function getOriginalURL(port){
+				var s = u.split(":");
+				s = s[0] + ":" + s[1] + ":" + port;
+				return s;
+			}
+			function sendCommandPhoto() 
+			{
+				enableButton(true);
+				g_connection.send("photoshot*");
+				last_command = "photoshot";
+			}
+			function sendCommandLive() 
+			{
+				enableButton(true);
+				g_connection.send("livefeed*");
+				last_command = "livefeed";
+			}
+			function sendCommandFeedStatus() 
+			{
+				enableButton(true);
+				g_connection.send("livefeedstatus*");
+				last_command = "livefeedstatus";
+			}
+			function sendCommandCamStatus() 
+			{
+				enableButton(true);
+				g_connection.send("camstatus*");
+				last_command = "camstatus";
+			}
+			function enableButton(val){
+				document.getElementById("comphoto").disabled = val;
+				document.getElementById("comlive").disabled = val;
+				document.getElementById("comstatus").disabled = val;
+				document.getElementById("comcamstatus").disabled = val;
+			}
+			
+			function log(command, data){
+				var br = document.createElement("br");
+				document.getElementById("result").appendChild(br);
+				var s = document.getElementById("result").innerHTML;
+				document.getElementById("result").innerHTML = s + command + " " + data;	
+			}
+			
+			function deactivateStreamView(){
+				isStreamActive=false;
+				var img = document.getElementById("videostream");
+				document.getElementById("videoframes").removeChild(img);
+			}
+			
+			if (typeof MozWebSocket != "undefined") {
+				g_connection = new MozWebSocket("ws://" + u.substr(7), "client-protocol");
+			} 
+			else {
+				g_connection = new WebSocket("ws://" + u.substr(7), "client-protocol");
+
+			}
+			try {
+				g_connection.onopen = function() {	
+					log("Connected", "");				
+				}
+				g_connection.onclose = function(){			
+					log("Diconnected", "");
+				}
+				g_connection.onmessage = function got_packet(msg){						
+					enableButton(false);					
+					log(last_command, msg.data);
+					if(msg.data=="CAM_ERROR*"){
+						deactivateStreamView();
+					}					
+					else if(last_command=="photoshot"){
+						if (msg.data!="ERROR*"){
+							var photo = document.getElementById("photo");						
+							if(photo==undefined){
+								photo = document.createElement("img");
+							}
+							
+							document.getElementById("photos").appendChild(photo);
+							var src = getOriginalURL("7779") + "/" + msg.data.replace("*","");
+							photo.width = 300;
+							photo.height = 200;
+							photo.src = getOriginalURL("7779") + "/" + msg.data.replace("*","");
+						}
+					}
+					else if (last_command=="livefeed"){
+						if (msg.data=="OK*"){
+							if(!isStreamActive){
+								isStreamActive = true;
+								var img = document.createElement("img");
+								img.id = "videostream";
+								img.src = getOriginalURL("7778");
+								document.getElementById("videoframes").appendChild(img);
+							}
+							else{							
+								deactivateStreamView();
+							}
+						}
+					}
+				}		
+			}			
+			catch(exception) {
+				alert('<p>Error' + exception); 				
+			}
+		</script>
+	</body>
+</html>
