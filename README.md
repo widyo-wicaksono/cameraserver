@@ -1,5 +1,5 @@
 # cameraserver
-Photobooth software (Multiplatform, but linux version currently unable to stream video feed properly). Support multiple concurrent cameras (DSLR, webcam, ipcam) and multiple client (browser based). The idea behind this is that you only need one mini pc/laptop for multiple photobooths.
+Photobooth software (Multiplatform, but Linux version currently unable to stream video feed properly). Support multiple concurrent cameras (DSLR, webcam, ip-cam) and multiple clients (browser-based). The idea behind this is that you only need one mini pc/laptop for multiple photo booths.
 ![desc1](https://user-images.githubusercontent.com/64301921/126728803-010e898d-3c5f-4eec-9da7-1beb88fec06a.jpg)
 
 Supported effects and filters :
