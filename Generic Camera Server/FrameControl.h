@@ -93,7 +93,7 @@ public:
 	std::atomic<bool> m_running;
 	std::thread m_thread;
 
-	void Run();	
+	int Run();	
 	void SetLog(std::shared_ptr<CLogManager> log);
 	void WriteLog(std::string data);
 	void* GetID();

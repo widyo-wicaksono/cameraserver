@@ -77,7 +77,7 @@ public:
 	CBaseMediaSource(std::shared_ptr<CLogManager> log, int width, int height, bool is_landscape);
 
 	virtual ~CBaseMediaSource() {};
-	virtual void StartLiveView() = 0;
+	virtual int StartLiveView() { return 0; };
 	virtual void StopLiveView();
 	virtual int GrabMostRecentFrame(cv::Mat& frame);// { return 0; };
 	virtual int CapturePhoto(cv::Mat& frame) =0;	
@@ -109,7 +109,7 @@ public:
 	CWebcamSource(std::string& index, std::shared_ptr<CLogManager> log, int width, int height, bool is_landscape);
 
 	void FnLiveViewThread();
-	void StartLiveView();	
+	int StartLiveView();	
 
 	//int GrabMostRecentFrame(cv::Mat& frame);
 	int CapturePhoto(cv::Mat& frame);
@@ -126,7 +126,7 @@ public:
 	CIPCam(std::string& address, std::shared_ptr<CLogManager> log, int width, int height, bool is_landscape);
 
 	void FnLiveViewThread();
-	void StartLiveView();	
+	int StartLiveView();	
 
 	//int GrabMostRecentFrame(cv::Mat& frame);
 	int CapturePhoto(cv::Mat& frame);

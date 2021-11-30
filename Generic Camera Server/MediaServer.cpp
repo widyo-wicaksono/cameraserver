@@ -26,6 +26,7 @@ int CMJPEGMediaServer::Init(int port) {
 	}
 	FD_SET(m_sock, &m_master);
 	m_pLog->AsyncWrite("Socket is listening ...", true, true);
+	m_isInited = true;
 	return 0;
 }
 
@@ -43,11 +44,15 @@ bool CMJPEGMediaServer::isOpened()
 
 int CMJPEGMediaServer::Write(const cv::Mat & frame)
 {
-	
+	assert(m_isInited == true);
 	if (m_thread.joinable())
 		m_thread.join();
-	m_thread = std::thread(&CMJPEGMediaServer::WriteToClient, this, frame);
-	
+	try {
+		m_thread = std::thread(&CMJPEGMediaServer::WriteToClient, this, frame);
+	}
+	catch (...) {
+		return -1;
+	}
 	//WriteToClient(frame);
 #ifndef _WIN32
 	cv::imshow("Webcam", frame);

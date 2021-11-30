@@ -21,8 +21,15 @@ CFrameControl::CFrameControl(std::shared_ptr<CBaseServer> pServer, void* lp_conn
 	m_pLog->AsyncWrite(m_pLog->string_format("Frame Control [0x%08x] is created", m_lp_connection).c_str(), true, true);
 }
 
-void CFrameControl::Run() {
-	m_thread = std::thread(&CFrameControl::FnControlThread, this);
+int CFrameControl::Run() {
+	try {
+		m_thread = std::thread(&CFrameControl::FnControlThread, this);
+	}
+	catch (...)
+	{
+		return -1;
+	}
+	return 0;
 }
 
 void CFrameControl::FnControlThread() {
@@ -437,6 +444,7 @@ void CFrameControl::ProcessCommand(std::string& data, std::string& res) {
 			return;
 		}
 		
+		bool IsLiveViewStartOK = false;
 		int state = m_sources[media_index].pMedia->GetState();
 		if ((state == MEDIA_THREAD_STATE_STARTING || state == MEDIA_THREAD_STATE_RUNNING)) {
 			if (m_pMediaServer != nullptr) {
@@ -445,13 +453,21 @@ void CFrameControl::ProcessCommand(std::string& data, std::string& res) {
 				return;
 			}
 			else {
-				m_sources[media_index].pMedia->StartLiveView();
+				if (m_sources[media_index].pMedia->StartLiveView() == 0)
+					IsLiveViewStartOK = true;
 			}
 		}
 		else {			
-			m_sources[media_index].pMedia->StartLiveView();
+			if (m_sources[media_index].pMedia->StartLiveView() == 0)
+				IsLiveViewStartOK = true;
 		}
 		
+		if (!IsLiveViewStartOK) {
+			GenerateJSONReply(document["command id"].GetString(), document["command"].GetString(), "ERROR", "StartLiveView failed!", res);
+			m_pLog->AsyncWrite(m_pLog->string_format("Frame Control [0x%08x] ERROR ! StartLiveView failed!", m_lp_connection).c_str(), true, true);
+			return;
+		}
+
 		double scale = 1.0;
 		if (document.HasMember("scale")) {
 			scale = document["scale"].GetDouble();

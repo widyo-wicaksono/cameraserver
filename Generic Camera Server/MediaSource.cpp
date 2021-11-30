@@ -84,14 +84,20 @@ CWebcamSource::~CWebcamSource() {
 	m_pLog->AsyncWrite(m_pLog->string_format("Media Source Webcam[%s] destroyed", m_id.c_str()).c_str(), true, true);
 }
 
-void CWebcamSource::StartLiveView() {
+int CWebcamSource::StartLiveView() {
 	/*
 	m_isrunning.store(true);
 	if (m_liveview_thread.joinable())
 		m_liveview_thread.join();
 		*/
 	StopLiveView();	
-	m_liveview_thread = std::thread(&CWebcamSource::FnLiveViewThread, this);
+	try {
+		m_liveview_thread = std::thread(&CWebcamSource::FnLiveViewThread, this);
+	}
+	catch (...) {
+		return -1;
+	}
+	return 0;
 }
 
 void CWebcamSource::FnLiveViewThread() {
@@ -292,14 +298,17 @@ int CIPCam::CapturePhoto(cv::Mat& frame) {
 	return ret;
 }
 
-void CIPCam::StartLiveView() {
-	/*
-	m_isrunning.store(true);
-	if (m_liveview_thread.joinable())
-		m_liveview_thread.join();
-		*/
+int CIPCam::StartLiveView() {
 	StopLiveView();
-	m_liveview_thread = std::thread(&CIPCam::FnLiveViewThread, this);
+	//m_liveview_thread = std::thread(&CIPCam::FnLiveViewThread, this);
+
+	try {
+		m_liveview_thread = std::thread(&CIPCam::FnLiveViewThread, this);
+	}
+	catch (...) {
+		return -1;
+	}
+	return 0;
 }
 
 #ifdef _WIN32

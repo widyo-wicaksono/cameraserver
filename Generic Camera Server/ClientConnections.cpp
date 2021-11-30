@@ -198,8 +198,14 @@ int CWSServer::Init() {
 	return -1;
 }
 
-void CWSServer::Run() {
-	m_thread = std::thread(&CWSServer::FnConnectionThread, this);
+int CWSServer::Run() {
+	try {
+		m_thread = std::thread(&CWSServer::FnConnectionThread, this);
+	}
+	catch (...) {
+		return -1;
+	}
+	return 0;
 }
 
 void CWSServer::FnConnectionThread() {
@@ -245,7 +251,7 @@ int CWSServer::SendWSData(std::string& datatosend, struct lws * wsi)
 
 	memcpy(content_start, datatosend.c_str(), chunk_size);
 	int iSent = lws_write(wsi, (unsigned char *)content_start, chunk_size, LWS_WRITE_TEXT);
-	delete sBuff;
+	free(sBuff);
 	return iSent;
 }
 

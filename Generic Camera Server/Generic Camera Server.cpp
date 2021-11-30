@@ -48,7 +48,10 @@ int main(int argc, char *args[])
 	pLog->AsyncWrite("Done", true, true);
 	pLog->AsyncWrite("Getting ready to accept connections ...", true, true);
 	std::shared_ptr<CBaseServer> pBaseServer = std::make_shared<CWSServer>(pLog);
-	pBaseServer->Run();	
+	if (pBaseServer->Run() == -1){
+		pLog->AsyncWrite("Failed to start Networking!", true, true);
+		return 0;
+	}
 	pLog->AsyncWrite("Done", true, true);
 	std::vector<std::shared_ptr<CFrameControl>> frame_controls;
 	while (g_isKeepRunning) {
@@ -56,7 +59,10 @@ int main(int argc, char *args[])
 		if (pBaseServer->AsyncGetNewConnection(&lp_con)) {			
 			pLog->AsyncWrite(pLog->string_format("New Connection inbound[0x%08x]", lp_con).c_str(), true, true);
 			frame_controls.push_back(std::make_shared<CFrameControl>(pBaseServer, lp_con, pLog));			
-			frame_controls[frame_controls.size() - 1]->Run();
+			if (frame_controls[frame_controls.size() - 1]->Run()==-1) {
+				pLog->AsyncWrite(pLog->string_format("Frame Control failed to start![0x%08x]", lp_con).c_str(), true, true);
+				frame_controls.pop_back();
+			}
 		}
 		if (pBaseServer->AsyncGetDisconnectedConnection(&lp_con)) {
 			for (int i = 0; i < (int)frame_controls.size(); i++) {

@@ -50,10 +50,16 @@ private:
 	fd_set m_master;
 	int m_timeout = 500; // master sock timeout, shutdown after timeout millis.
 	int m_quality = 50; // jpeg compression [1..100]
-
+	bool m_isInited = false;
 	
 	std::thread m_thread;
 
+	int Init(int port);
+	int release();	
+	bool isOpened();
+	
+	int WriteToClient(const cv::Mat frame);
+	int _write(int sock, const char *s, int len);
 public:	
 	CMJPEGMediaServer(std::shared_ptr<CLogManager> log, double scale);
 	~CMJPEGMediaServer() {
@@ -63,10 +69,7 @@ public:
 		release();		
 	};
 
-	int Init(int port);
-	int release();	
-	bool isOpened();
+	
 	int Write(const cv::Mat& frame);
-	int WriteToClient(const cv::Mat frame);
-	int _write(int sock, const char *s, int len);
+	
 };

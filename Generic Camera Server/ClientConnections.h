@@ -38,11 +38,13 @@ protected:
 	std::mutex m_outbound_lock;
 	std::mutex m_connection_lock;
 
-public:		
-	virtual ~CBaseServer() {};
 	virtual int Init() { return 0; };
 	virtual int Uninit() { return 0; };
-	virtual void Run() {};
+
+public:		
+	virtual ~CBaseServer() {};
+	
+	virtual int Run() { return 0; };
 
 	virtual void FnConnectionThread() {};
 
@@ -69,6 +71,10 @@ private:
 	std::vector<_ConnectionMessage> m_outbound_data_buffer;
 	std::vector<_ConnectionMessage> m_inbound_data_buffer;
 	
+protected:
+	int Init();
+	int Uninit();
+
 public:		
 	CWSServer(std::shared_ptr<CLogManager> log);
 	~CWSServer();
@@ -77,10 +83,8 @@ public:
 
 	static int callback_client(struct lws *wsi, enum lws_callback_reasons reason, void *user, void *in, size_t len);
 	
-	int Init();
-	int Uninit();
+	int Run();
 
-	void Run();
 	void SignalStop(bool signal);	
 	void FnConnectionThread();
 
