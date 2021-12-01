@@ -133,8 +133,8 @@ int CMJPEGMediaServer::WriteToClient(const cv::Mat frame)
 			int n = _write(client, header_reply.c_str(), 0);
 			if(n < (int)header_reply.size())
 				m_pLog->AsyncWrite("Error in sending header reply part 1!", true, true);
-			else
-				m_pLog->AsyncWrite("Header reply part 1 sent!", true, true);
+			//else
+			//	m_pLog->AsyncWrite("Header reply part 1 sent!", true, true);
 			/*
 			_write(client,
 				"Server: Mozarella/2.2\r\n"
@@ -159,15 +159,11 @@ int CMJPEGMediaServer::WriteToClient(const cv::Mat frame)
 			n = _write(client, header_reply.c_str(), 0);
 			if (n < (int)header_reply.size())
 				m_pLog->AsyncWrite("Error in sending header reply part 2!", true, true);
-			else
-				m_pLog->AsyncWrite("Header reply part 2 sent!", true, true);
+			//else
+			//	m_pLog->AsyncWrite("Header reply part 2 sent!", true, true);
 		}
 		else // existing client, just stream pix
 		{
-#ifndef _WIN32
-			std::cout << "Sending frames ..." << std::endl;
-#endif // !_WIN32
-
 			char head[400] = { 0 };
 			sprintf(head, "--mjpegstream\r\nContent-Type: image/jpeg\r\nContent-Length: %lu\r\n\r\n", (long unsigned int)outlen);
 			int n = _write(s, head, 0);
