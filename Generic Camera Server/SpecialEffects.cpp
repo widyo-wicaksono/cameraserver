@@ -128,7 +128,10 @@ CDynamicFrame::CDynamicFrame(const char* name, std::shared_ptr<CLogManager> log,
 	m_stack_effect_index = STACK_INDEX_DYN_FRAME;
 
 	m_isrunning.store(true);
-	m_liveview_thread = std::thread(&CDynamicFrame::FnLiveViewThread, this);
+	try {
+		m_liveview_thread = std::thread(&CDynamicFrame::FnLiveViewThread, this);
+	}
+	catch(...){}
 }
 
 CDynamicFrame::CDynamicFrame(const char* name, std::shared_ptr<CLogManager> log, bool greenscreen, int stackindex, bool repeat) : CBaseEffect(name, log)
@@ -136,14 +139,20 @@ CDynamicFrame::CDynamicFrame(const char* name, std::shared_ptr<CLogManager> log,
 	m_stack_effect_index = stackindex;
 
 	m_isrunning.store(true);
-	m_liveview_thread = std::thread(&CDynamicFrame::FnLiveViewThread, this);
+	try {
+		m_liveview_thread = std::thread(&CDynamicFrame::FnLiveViewThread, this);
+	}
+	catch(...){}
 }
 
 CDynamicFrame::CDynamicFrame(const char* name, std::shared_ptr<CLogManager> log, bool greenscreen, int stackindex, int width, int height, bool repeat) : CBaseEffect(name, log)
 	, m_greenscreen_mode(greenscreen),  m_width(width), m_height(height), m_is_repeat(repeat) {
 	m_stack_effect_index = stackindex;
 	m_isrunning.store(true);
-	m_liveview_thread = std::thread(&CDynamicFrame::FnLiveViewThread, this);
+	try {
+		m_liveview_thread = std::thread(&CDynamicFrame::FnLiveViewThread, this);
+	}
+	catch (...) {}
 	
 	if (m_is_hw_accelerated) {
 		if (object_count == 0) {
@@ -273,17 +282,20 @@ int CDynamicFrame::filter(cv::Mat& frame) {
 				if (layer.cols != frame.cols || layer.rows != frame.rows)
 					cv::resize(layer, layer, cv::Size(frame.cols, frame.rows));
 
-				auto fut1 = std::async(std::launch::async, &CDynamicFrame::AsyncOverlay, this, frame, layer, frame, 1, 4);
-				auto fut2 = std::async(std::launch::async, &CDynamicFrame::AsyncOverlay, this, frame, layer, frame, 2, 4);
-				auto fut3 = std::async(std::launch::async, &CDynamicFrame::AsyncOverlay, this, frame, layer, frame, 3, 4);
-				auto fut4 = std::async(std::launch::async, &CDynamicFrame::AsyncOverlay, this, frame, layer, frame, 4, 4);
-				auto fut5 = std::async(std::launch::async, &CDynamicFrame::AsyncOverlay, this, frame, layer, frame, 5, 5);
+				try {
+					auto fut1 = std::async(std::launch::async, &CDynamicFrame::AsyncOverlay, this, frame, layer, frame, 1, 4);
+					auto fut2 = std::async(std::launch::async, &CDynamicFrame::AsyncOverlay, this, frame, layer, frame, 2, 4);
+					auto fut3 = std::async(std::launch::async, &CDynamicFrame::AsyncOverlay, this, frame, layer, frame, 3, 4);
+					auto fut4 = std::async(std::launch::async, &CDynamicFrame::AsyncOverlay, this, frame, layer, frame, 4, 4);
+					auto fut5 = std::async(std::launch::async, &CDynamicFrame::AsyncOverlay, this, frame, layer, frame, 5, 5);
 
-				fut1.get();
-				fut2.get();
-				fut3.get();
-				fut4.get();
-				fut5.get();
+					fut1.get();
+					fut2.get();
+					fut3.get();
+					fut4.get();
+					fut5.get();
+				}
+				catch(...){}
 			}
 		}
 	}

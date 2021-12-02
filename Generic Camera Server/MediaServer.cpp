@@ -45,8 +45,13 @@ bool CMJPEGMediaServer::isOpened()
 int CMJPEGMediaServer::Write(const cv::Mat & frame)
 {
 	assert(m_isInited == true);
-	if (m_thread.joinable())
+	if (m_thread.joinable()) {
 		m_thread.join();
+	}
+	else if(m_thread.native_handle()!=NULL)
+	{
+		return -1;
+	}
 	try {
 		m_thread = std::thread(&CMJPEGMediaServer::WriteToClient, this, frame);
 	}
@@ -129,24 +134,11 @@ int CMJPEGMediaServer::WriteToClient(const cv::Mat frame)
 			FD_SET(client, &m_master);
 
 			std::string header_reply = "HTTP/1.0 200 OK\r\n";
-			//_write(client, "HTTP/1.0 200 OK\r\n", 0);
+			
 			int n = _write(client, header_reply.c_str(), 0);
 			if(n < (int)header_reply.size())
 				m_pLog->AsyncWrite("Error in sending header reply part 1!", true, true);
-			//else
-			//	m_pLog->AsyncWrite("Header reply part 1 sent!", true, true);
-			/*
-			_write(client,
-				"Server: Mozarella/2.2\r\n"
-				"Accept-Range: bytes\r\n"
-				"Connection: close\r\n"
-				"Max-Age: 0\r\n"
-				"Expires: 0\r\n"
-				"Cache-Control: no-cache, private\r\n"
-				"Pragma: no-cache\r\n"
-				"Content-Type: multipart/x-mixed-replace; boundary=mjpegstream\r\n"
-				"\r\n", 0);
-				*/
+			
 			header_reply = "Server: Mozarella/2.2\r\n"
 				"Accept-Range: bytes\r\n"
 				"Connection: close\r\n"
@@ -159,8 +151,7 @@ int CMJPEGMediaServer::WriteToClient(const cv::Mat frame)
 			n = _write(client, header_reply.c_str(), 0);
 			if (n < (int)header_reply.size())
 				m_pLog->AsyncWrite("Error in sending header reply part 2!", true, true);
-			//else
-			//	m_pLog->AsyncWrite("Header reply part 2 sent!", true, true);
+			
 		}
 		else // existing client, just stream pix
 		{
