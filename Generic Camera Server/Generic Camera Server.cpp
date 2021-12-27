@@ -35,7 +35,8 @@ int main(int argc, char *args[])
 	GetConsoleMode(hInput, &prev_mode);
 	SetConsoleMode(hInput, prev_mode & ENABLE_EXTENDED_FLAGS);
 #endif
-	std::shared_ptr<CLogManager> pLog = std::make_shared<CLogManager>("Camera Platform Server", LOG_TYPE_LOCAL);
+	//std::shared_ptr<CLogManager> pLog = std::make_shared<CLogManager>("Camera Platform Server", LOG_TYPE_LOCAL);
+	std::shared_ptr<CLogManager> pLog = std::make_shared<CLogManager>("Camera Platform Server", LOG_TYPE_STANDARD);
 	pLog->Init();	
 	pLog->AsyncWrite("Camera Platform Server Ver. 0.0.1", true, true);
 	pLog->AsyncWrite("=================================", true, true);	
@@ -58,7 +59,8 @@ int main(int argc, char *args[])
 		void* lp_con = nullptr;		
 		if (pBaseServer->AsyncGetNewConnection(&lp_con)) {			
 			pLog->AsyncWrite(pLog->string_format("New Connection inbound[0x%08x]", lp_con).c_str(), true, true);
-			frame_controls.push_back(std::make_shared<CFrameControl>(pBaseServer, lp_con, pLog));			
+			//frame_controls.push_back(std::make_shared<CFrameControl>(pBaseServer, lp_con, pLog));			
+			frame_controls.emplace_back(std::move(std::make_shared<CFrameControl>(pBaseServer, lp_con, pLog)));
 			if (frame_controls[frame_controls.size() - 1]->Run()==-1) {
 				pLog->AsyncWrite(pLog->string_format("Frame Control failed to start![0x%08x]", lp_con).c_str(), true, true);
 				frame_controls.pop_back();

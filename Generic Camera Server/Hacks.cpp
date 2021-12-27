@@ -77,13 +77,18 @@ int fixForFastPlayback(const char* source, const char* dest)
 	int bytes_to_copy;
 
 	int ret;
-
+	/*
 	infile = fopen(source, "rb");
 	if (!infile) {
 		perror(source);
 		goto error_out;
 	}
-
+	*/
+	auto err = fopen_s(&infile, source, "rb");
+	if (err != 0) {
+		perror(source);
+		goto error_out;
+	}
 	/* traverse through the atoms in the file to make sure that 'moov' is
 	 * at the end */
 	while (!feof(infile)) {
@@ -244,8 +249,15 @@ int fixForFastPlayback(const char* source, const char* dest)
 	}
 
 	/* re-open the input file and open the output file */
+	/*
 	infile = fopen(source, "rb");
 	if (!infile) {
+		perror(source);
+		goto error_out;
+	}
+	*/
+	err = fopen_s(&infile, source, "rb");
+	if (err != 0) {
 		perror(source);
 		goto error_out;
 	}
@@ -255,12 +267,18 @@ int fixForFastPlayback(const char* source, const char* dest)
 		last_offset -= start_offset;
 	}
 
+	/*
 	outfile = fopen(dest, "wb");
 	if (!outfile) {
 		perror(dest);
 		goto error_out;
 	}
-
+	*/
+	err = fopen_s(&outfile, dest, "wb");
+	if (err!=0) {
+		perror(dest);
+		goto error_out;
+	}
 	/* dump the same ftyp atom */
 	if (ftyp_atom_size > 0) {
 		printf(" writing ftyp atom...\n");

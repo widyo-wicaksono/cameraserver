@@ -39,6 +39,34 @@ int GetFilesList(std::vector<std::string>& filenames, const char* path, bool is_
 }
 
 */
+
+int concatStr(const char* _source, char* _dest, int max_len) {
+	if (strlen(_source) + strlen(_dest) < max_len) {
+		strcat_s(_dest, max_len, _source);		
+	}
+	else
+		return -1;
+	return 0;
+}
+
+int copyStr(const char* _source, char* _dest, int max_len) {
+	if (strlen(_source) + strlen(_dest) < max_len) {
+		strcpy_s(_dest, max_len, _source);
+	}
+	else
+		return -1;
+	return 0;
+}
+
+int printStr(const char* _source, char* _dest, int max_len) {
+	if (strlen(_source) + strlen(_dest) < max_len) {
+		strcpy_s(_dest, max_len, _source);
+	}
+	else
+		return -1;
+	return 0;
+}
+
 CFPSCounter::CFPSCounter() {
 	m_fps_ts = std::chrono::high_resolution_clock::now();
 }

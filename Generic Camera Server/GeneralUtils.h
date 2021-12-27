@@ -23,3 +23,5 @@ private:
 };
 
 std::string implode(const std::vector<std::string>& elems, char delim);
+int concatStr(const char* _source, char* _dest, int max_len);
+int copyStr(const char* _source, char* _dest, int max_len);

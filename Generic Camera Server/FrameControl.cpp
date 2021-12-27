@@ -40,11 +40,8 @@ void CFrameControl::FnControlThread() {
 	std::chrono::time_point<std::chrono::high_resolution_clock> frame_ts = std::chrono::high_resolution_clock::now();
 
 	while (bIsRunning) {
-		//std::string fps = pfps->GetFPSinString();
-		CBaseServer::_ConnectionMessage out_message;
-		out_message.lp_connection = m_lp_connection;
-		out_message.flow = CBaseServer::_ConnectionMessage::DataDirection::outbound;
 		
+		CBaseServer::_ConnectionMessage out_message(CBaseServer::_ConnectionMessage::DataDirection::outbound, m_lp_connection, "");
 		std::string buffer;
 				
 		for (auto& source : m_sources) {
@@ -97,9 +94,7 @@ void CFrameControl::FnControlThread() {
 			}
 		}
 
-		CBaseServer::_ConnectionMessage in_message;
-		in_message.lp_connection = m_lp_connection;
-
+		CBaseServer::_ConnectionMessage in_message(CBaseServer::_ConnectionMessage::DataDirection::none, m_lp_connection, "");
 		if (!IsAsybcTaskInProgress) {						
 			if (m_pClientCon->AsyncGetMessage(in_message) == 0) {
 				ProcessCommand(in_message.data, buffer);

@@ -67,9 +67,7 @@ void CBaseServer::AsyncAddNewConnection(void* p) {
 	m_new_connections.push_back(p);
 	m_connection_lock.unlock();
 
-	_ConnectionMessage x;
-	x.lp_connection = p;
-	m_internal_connection_list.push_back(x);
+	m_internal_connection_list.emplace_back(_ConnectionMessage::DataDirection::none, p, "");
 }
 
 void CBaseServer::AsyncAddDisconnectedConnection(void* p) {
@@ -324,11 +322,7 @@ int CWSServer::UploadDataToControlIfAvalable(struct lws * wsi, std::string& data
 		}
 	}	
 	if (!bIsFound) {
-		_ConnectionMessage message;
-		message.lp_connection = (void*)wsi;
-		message.data = "";
-		message.flow = _ConnectionMessage::DataDirection::inbound;
-		m_inbound_data_buffer.push_back(message);
+		m_inbound_data_buffer.emplace_back(_ConnectionMessage::DataDirection::inbound, (void*)wsi, "");
 	}
 	m_inbound_data_buffer[index].data = m_inbound_data_buffer[index].data + data;
 	size_t remaining = lws_remaining_packet_payload(wsi);
@@ -351,12 +345,9 @@ int CWSServer::UploadDataToControlIfAvalable(struct lws * wsi, std::string& data
 			}
 			return 0;
 		}
-
-		_ConnectionMessage message;
-		message.lp_connection = (void*)wsi;
-		message.data = m_inbound_data_buffer[index].data;
-		message.flow = _ConnectionMessage::DataDirection::inbound;
-		AsyncAddMessageToQueue(message);
+		
+		_ConnectionMessage message(_ConnectionMessage::DataDirection::inbound, (void*)wsi, m_inbound_data_buffer[index].data);
+		AsyncAddMessageToQueue(message);		
 		m_inbound_data_buffer.erase(m_inbound_data_buffer.begin() + index);
 	}
 	else		

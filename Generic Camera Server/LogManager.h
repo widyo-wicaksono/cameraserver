@@ -25,6 +25,7 @@ public:
 	int WriteNote(const char* path, const char* data);
 	
 	std::string string_format(const std::string fmt_str, ...);
+	//std::string string_format(const char* str, ...);
 
 private:
 	std::string m_sAppName;

@@ -15,10 +15,13 @@ class CBaseServer {
 public:
 	enum class ConnectionThreadState { idle, run, exiting, exit };	
 	struct _ConnectionMessage {
-		enum class DataDirection { inbound, outbound } flow;
-		void* lp_connection;
-		std::string data;
-	};
+		enum class DataDirection { inbound, outbound, none } flow = DataDirection::none;
+		void* lp_connection = nullptr;
+		std::string data = "";
+		_ConnectionMessage() = default;		
+		_ConnectionMessage(DataDirection flow_, void* conn_, std::string data_):flow(flow_), lp_connection(conn_), data(std::move(data_))
+		{};
+	};	
 
 protected:	
 	std::shared_ptr<CLogManager> m_pLog = nullptr;

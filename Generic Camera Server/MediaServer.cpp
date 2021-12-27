@@ -156,7 +156,8 @@ int CMJPEGMediaServer::WriteToClient(const cv::Mat frame)
 		else // existing client, just stream pix
 		{
 			char head[400] = { 0 };
-			sprintf(head, "--mjpegstream\r\nContent-Type: image/jpeg\r\nContent-Length: %lu\r\n\r\n", (long unsigned int)outlen);
+			//sprintf(head, "--mjpegstream\r\nContent-Type: image/jpeg\r\nContent-Length: %lu\r\n\r\n", (long unsigned int)outlen);
+			sprintf_s(head, 400, "--mjpegstream\r\nContent-Type: image/jpeg\r\nContent-Length: %lu\r\n\r\n", (long unsigned int)outlen);
 			int n = _write(s, head, 0);
 			if(n<(int)strlen(head))
 				m_pLog->AsyncWrite("Error in sending header data", true, true);
