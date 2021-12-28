@@ -104,7 +104,7 @@ void CWebcamSource::FnLiveViewThread() {
 	
 	std::unique_ptr<CFPSCounter> pfps = std::make_unique<CFPSCounter>();
 	m_isrunning.store(true);
-	//m_error_code.store(ERR_NONE);
+	
 	m_state.store(MEDIA_THREAD_STATE_STARTING);
 	bool bIsRunning= m_isrunning.load();
 
@@ -117,6 +117,7 @@ void CWebcamSource::FnLiveViewThread() {
 #else
 	if (cap.open(std::stoi(m_id))) {
 #endif
+		
 		int width = (int)cap.get(cv::CAP_PROP_FRAME_WIDTH);
 		int height = (int)cap.get(cv::CAP_PROP_FRAME_HEIGHT);		
 		
@@ -130,7 +131,7 @@ void CWebcamSource::FnLiveViewThread() {
 				cap.set(cv::CAP_PROP_FRAME_HEIGHT, m_lv_height);				
 			}
 		}
-
+		
 		m_state.store(MEDIA_THREAD_STATE_RUNNING);
 		while (bIsRunning) {
 			cv::Mat frame;			
@@ -147,16 +148,12 @@ void CWebcamSource::FnLiveViewThread() {
 				if (m_frame_buffer.size() > 50) {
 					m_frame_buffer.erase(m_frame_buffer.begin());
 				}
-				m_frame_buffer.push_back(frame);
-				m_framelock.unlock();
+				m_frame_buffer.push_back(frame);				
+				m_framelock.unlock();			
 
-				//cv::imshow("Webcam", frame);
-				//cv::waitKey(1);
-
-				std::this_thread::sleep_for(std::chrono::milliseconds(1));
+				std::this_thread::sleep_for(std::chrono::milliseconds(5));
 			}
-			else {
-				//m_error_code.store(ERR_WEBCAM_EMPTY_FRAME);
+			else {				
 				SetError(ERR_WEBCAM_EMPTY_FRAME);
 				std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 			}
@@ -167,8 +164,7 @@ void CWebcamSource::FnLiveViewThread() {
 		cv::destroyAllWindows();		
 	}
 	else {
-		m_pLog->AsyncWrite(m_pLog->string_format("Failed to webcam [%s]", m_id.c_str()).c_str(), true, true);
-		//m_error_code.store(ERR_WEBCAM_FAIL_TO_OPEN);
+		m_pLog->AsyncWrite(m_pLog->string_format("Failed to webcam [%s]", m_id.c_str()).c_str(), true, true);		
 		SetError(ERR_WEBCAM_FAIL_TO_OPEN);
 	}
 	m_pLog->AsyncWrite(m_pLog->string_format("Stream Thread [%s] exiting ...", m_id.c_str()).c_str(), true, true);

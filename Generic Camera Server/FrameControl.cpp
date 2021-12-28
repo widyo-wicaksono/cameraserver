@@ -124,21 +124,12 @@ void CFrameControl::FnControlThread() {
 					if (m_sources[liveview_source_index].pMedia->GrabMostRecentFrame(frame) == 0) {
 						ApplyImageModification(frame);
 						
-						std::string fps = pfps->GetFPSinString();						
-						//int cur_fps = std::stoi(fps);
-						//if(cur_fps<15)
-						//	m_pLog->AsyncWriteNonUnicode(m_pLog->string_format("FPS drops below 15 [%d]", cur_fps).c_str(), true, true);									
+						std::string fps = pfps->GetFPSinString();														
 						m_pLog->WriteToOCVScreen(fps.c_str(), 150, 50, 0, 255, 255, frame);
 						
-						if (m_bIsRecording) {							
-							FrameData x;
-							x.frame = frame;
-							x.FPS = std::stoi(fps);
-							x.ts = std::chrono::high_resolution_clock::now();
-							m_frame_datas.push_back(x);
-						}
-						//cv::imshow("TEST", frame);
-						//cv::waitKey(1);
+						if (m_bIsRecording) {												
+							m_frame_datas.emplace_back(frame, std::stoi(fps), std::chrono::high_resolution_clock::now());
+						}						
 						m_pMediaServer->Write(frame);
 					}
 				}
@@ -348,11 +339,13 @@ void CFrameControl::ProcessCommand(std::string& data, std::string& res) {
 					x.pMedia = std::make_shared<CWebcamSource>(source_id, m_pLog);
 				m_sources.push_back(x);
 
+				/*
 				MediaSourceInfo minfo;					
 				minfo.pMedia = m_sources[m_sources.size() - 1].pMedia ;
 				minfo.m_source_ref_count = 1;
 				m_created_media_sources.push_back(minfo);
-					
+					*/
+				m_created_media_sources.emplace_back(m_sources[m_sources.size() - 1].pMedia, 1);
 				m_created_media_sources_lock.unlock();									
 				m_pLog->AsyncWrite("Done", true, true);
 			}
@@ -379,12 +372,13 @@ void CFrameControl::ProcessCommand(std::string& data, std::string& res) {
 				else
 					x.pMedia = std::make_shared<CIPCam>(source_id, m_pLog);
 				m_sources.push_back(x);
-
+				/*
 				MediaSourceInfo minfo;
 				minfo.pMedia = m_sources[m_sources.size() - 1].pMedia;
 				minfo.m_source_ref_count = 1;
 				m_created_media_sources.push_back(minfo);
-
+				*/
+				m_created_media_sources.emplace_back(m_sources[m_sources.size() - 1].pMedia, 1);
 				m_created_media_sources_lock.unlock();				
 				m_pLog->AsyncWrite("Done", true, true);
 			}

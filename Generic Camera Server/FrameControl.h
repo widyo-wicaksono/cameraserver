@@ -18,6 +18,8 @@ public:
 	struct MediaSourceInfo {
 		std::shared_ptr<CBaseMediaSource> pMedia = nullptr;		
 		int m_source_ref_count=0;		
+		MediaSourceInfo(std::shared_ptr<CBaseMediaSource> p_, int ref_):pMedia(p_), m_source_ref_count(ref_)
+		{}
 	};
 
 	struct MediaSourceTask {
@@ -32,6 +34,8 @@ public:
 		cv::Mat frame;
 		int FPS;		
 		std::chrono::time_point<std::chrono::high_resolution_clock> ts;
+		FrameData(cv::Mat frame_, int fps_, std::chrono::time_point<std::chrono::high_resolution_clock> ts_) : frame(frame_), FPS(fps_), ts(ts_)
+		{};
 	};
 
 private:	

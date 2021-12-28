@@ -32,8 +32,8 @@ int CBaseServer::AsyncGetMessage(_ConnectionMessage& message) {
 
 int CBaseServer::AsyncPutMessage(_ConnectionMessage& message) {
 	int ret = 0;
-	m_outbound_lock.lock();
-	m_outbound.push_back(message);
+	m_outbound_lock.lock();	
+	m_outbound.emplace_back(message);
 	m_outbound_lock.unlock();
 	return ret;
 }
@@ -215,7 +215,8 @@ void CWSServer::FnConnectionThread() {
 			if (lws_service(m_pcontext, 5) >= 0) {
 				_ConnectionMessage message;
 				if (AsyncGetMessageFromQueue(message)) {
-					m_outbound_data_buffer.push_back(message);
+					//m_outbound_data_buffer.push_back(message);
+					m_outbound_data_buffer.emplace_back(message);
 					lws_callback_on_writable((struct lws*)message.lp_connection);
 				}
 			}
@@ -253,9 +254,10 @@ int CWSServer::SendWSData(std::string& datatosend, struct lws * wsi)
 	return iSent;
 }
 
-void CWSServer::AsyncAddMessageToQueue(_ConnectionMessage& message) {
+void CWSServer::AsyncAddMessageToQueue(const _ConnectionMessage& message) {
 	m_inbound_lock.lock();
-	m_inbound.push_back(message);
+	//m_inbound.push_back(message);
+	m_inbound.emplace_back(message);
 	m_inbound_lock.unlock();
 }
 

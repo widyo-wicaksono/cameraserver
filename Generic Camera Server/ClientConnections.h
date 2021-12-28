@@ -93,7 +93,7 @@ public:
 
 	int SendWSData(std::string& datatosend, struct lws * wsi);
 
-	void AsyncAddMessageToQueue(_ConnectionMessage& message);
+	void AsyncAddMessageToQueue(const _ConnectionMessage& message);
 	bool AsyncGetMessageFromQueue(_ConnectionMessage& message);
 
 	int SendDataToClientIfAvalable(struct lws * wsi);
