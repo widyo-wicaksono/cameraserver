@@ -1,6 +1,9 @@
 #pragma once
 #include <opencv2/opencv.hpp>
 #include <thread>
+#include <atomic>
+#include <condition_variable>
+
 #include "LogManager.h"
 
 #ifdef _WIN32
@@ -53,23 +56,31 @@ private:
 	bool m_isInited = false;
 	
 	std::thread m_thread;
+	std::atomic<bool> m_IsRunning;
+	std::mutex m_mxLoop;
+	std::mutex m_mxData;
+	cv::Mat m_frame;
+	std::condition_variable_any m_cv;
 
 	int Init(int port);
 	int release();	
-	bool isOpened();
-	
+	bool isOpened();		
+
 	int WriteToClient(const cv::Mat frame);
+	void WriteToClientEx();
 	int _write(int sock, const char *s, int len);
 public:	
 	CMJPEGMediaServer(std::shared_ptr<CLogManager> log, double scale);
-	~CMJPEGMediaServer() {
-		//
+	~CMJPEGMediaServer() {		
+		m_IsRunning.store(false);
+		m_cv.notify_one();
 		if (m_thread.joinable())
 			m_thread.join();
 		release();		
 	};
 
-	
+	int putFrame(const cv::Mat frame);
 	int Write(const cv::Mat& frame);
+	//int WriteEx(const cv::Mat & frame);
 	
 };
