@@ -28,7 +28,7 @@ static int interrupt_cb(void *ctx)
 
 static const AVIOInterruptCB int_cb = { interrupt_cb, NULL };
 
-int CBasicFFMPEGWrap::openStream(std::string& media_path, std::string& error_string) {
+int CBasicFFMPEGWrap::openStream(const std::string& media_path, std::string& error_string) {
 	
 	closeStream();
 	m_MediaPath = media_path;

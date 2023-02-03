@@ -12,7 +12,7 @@ SDL_Texture* CDynamicFrame::sdl_base_texture = nullptr;
 int CDynamicFrame::object_count = 0;
 int CDynamicFrame::processed_object_count = 0;
 
-CFilter::CFilter(const std::string& name, std::shared_ptr<CLogManager> log) : CBaseEffect(name, log) {
+CFilter::CFilter(const std::string& name) : CBaseEffect(name) {
 	m_stack_effect_index = STACK_INDEX_FILTER;
 }
 
@@ -39,10 +39,8 @@ int CFilter::filter(cv::Mat& frame) {
 	return 0;
 }
 
-
-
-CCrop::CCrop(int x, int y, std::shared_ptr<CLogManager> log) : CBaseEffect("Crop", log), m_width(x), m_height(y) {
-	m_stack_effect_index = STACK_INDEX_DIM;
+CCrop::CCrop(int x, int y) : CBaseEffect("Crop"), m_width(x), m_height(y) {
+m_stack_effect_index = STACK_INDEX_DIM;
 }
 
 int CCrop::filter(cv::Mat& frame) {
@@ -56,8 +54,8 @@ int CCrop::filter(cv::Mat& frame) {
 	return 0;
 }
 
-COverlay::COverlay(const std::string& name, std::shared_ptr<CLogManager> log) : CBaseEffect(name, log) {
-	m_stack_effect_index = STACK_INDEX_FRAME;
+COverlay::COverlay(const std::string& name) : CBaseEffect(name) {
+m_stack_effect_index = STACK_INDEX_FRAME;
 #ifdef _WIN32
 	std::string path = "frames\\" + m_name + ".png";
 #else
@@ -66,9 +64,8 @@ COverlay::COverlay(const std::string& name, std::shared_ptr<CLogManager> log) : 
 	frame_overlay = cv::imread(path, -1);
 }
 
-COverlay::COverlay(const std::string& name, std::shared_ptr<CLogManager> log, int stack_index) : CBaseEffect(name, log) {
+COverlay::COverlay(const std::string& name, int stack_index) : CBaseEffect(name) {
 	m_stack_effect_index = stack_index;
-	//std::string path = "frames\\" + m_name + ".png";
 #ifdef _WIN32
 	std::string path = "frames\\" + m_name + ".png";
 #else
@@ -123,32 +120,32 @@ void COverlay::overlayImage(const cv::Mat &background, const cv::Mat &foreground
 	}
 }
 
-CDynamicFrame::CDynamicFrame(const char* name, std::shared_ptr<CLogManager> log, bool greenscreen, bool repeat) : CBaseEffect(name, log)
+CDynamicFrame::CDynamicFrame(const char* name, bool greenscreen, bool repeat) : CBaseEffect(name)
 	, m_greenscreen_mode(greenscreen), m_is_repeat(repeat){
 	m_stack_effect_index = STACK_INDEX_DYN_FRAME;
 
-	m_isrunning.store(true);
+	m_isrunning.store(true, std::memory_order_relaxed);
 	try {
 		m_liveview_thread = std::thread(&CDynamicFrame::FnLiveViewThread, this);
 	}
 	catch(...){}
 }
 
-CDynamicFrame::CDynamicFrame(const char* name, std::shared_ptr<CLogManager> log, bool greenscreen, int stackindex, bool repeat) : CBaseEffect(name, log)
+CDynamicFrame::CDynamicFrame(const char* name, bool greenscreen, int stackindex, bool repeat) : CBaseEffect(name)
 	, m_greenscreen_mode(greenscreen), m_is_repeat(repeat){
 	m_stack_effect_index = stackindex;
 
-	m_isrunning.store(true);
+	m_isrunning.store(true, std::memory_order_relaxed);
 	try {
 		m_liveview_thread = std::thread(&CDynamicFrame::FnLiveViewThread, this);
 	}
 	catch(...){}
 }
 
-CDynamicFrame::CDynamicFrame(const char* name, std::shared_ptr<CLogManager> log, bool greenscreen, int stackindex, int width, int height, bool repeat) : CBaseEffect(name, log)
+CDynamicFrame::CDynamicFrame(const char* name, bool greenscreen, int stackindex, int width, int height, bool repeat) : CBaseEffect(name)
 	, m_greenscreen_mode(greenscreen),  m_width(width), m_height(height), m_is_repeat(repeat) {
 	m_stack_effect_index = stackindex;
-	m_isrunning.store(true);
+	m_isrunning.store(true, std::memory_order_relaxed);
 	try {
 		m_liveview_thread = std::thread(&CDynamicFrame::FnLiveViewThread, this);
 	}
@@ -170,24 +167,24 @@ CDynamicFrame::CDynamicFrame(const char* name, std::shared_ptr<CLogManager> log,
 	}
 }
 
-CDynamicFrame::CDynamicFrame(const char* name, std::shared_ptr<CLogManager> log, bool greenscreen, int stackindex, int rl, int gl, int bl, int rh, int gh, int bh, bool repeat) :CBaseEffect(name, log)
+CDynamicFrame::CDynamicFrame(const char* name, bool greenscreen, int stackindex, int rl, int gl, int bl, int rh, int gh, int bh, bool repeat) :CBaseEffect(name)
 	, m_greenscreen_mode(greenscreen)
 	, m_R_low(rl), m_G_low(gl), m_B_low(bl)
 	, m_R_high(rh), m_G_high(gh), m_B_high(bh), m_is_repeat(repeat)
 {
 	m_stack_effect_index = stackindex;
-	m_isrunning.store(true);
+	m_isrunning.store(true, std::memory_order_relaxed);
 	m_liveview_thread = std::thread(&CDynamicFrame::FnLiveViewThread, this);
 }
 
-CDynamicFrame::CDynamicFrame(const char* name, std::shared_ptr<CLogManager> log, bool greenscreen, int stackindex
-	, int width, int height, int rl, int gl, int bl, int rh, int gh, int bh, bool repeat) :CBaseEffect(name, log)
+CDynamicFrame::CDynamicFrame(const char* name, bool greenscreen, int stackindex
+	, int width, int height, int rl, int gl, int bl, int rh, int gh, int bh, bool repeat) :CBaseEffect(name)
 	, m_greenscreen_mode(greenscreen), m_width(width), m_height(height)
 	, m_R_low(rl), m_G_low(gl), m_B_low(bl)
 	, m_R_high(rh), m_G_high(gh), m_B_high(bh), m_is_repeat(repeat)
 {
 	m_stack_effect_index = stackindex;
-	m_isrunning.store(true);
+	m_isrunning.store(true, std::memory_order_relaxed);
 	m_liveview_thread = std::thread(&CDynamicFrame::FnLiveViewThread, this);
 }
 
@@ -311,16 +308,16 @@ void CDynamicFrame::FnLiveViewThread() {
 
 	std::unique_ptr<CFPSCounter> pfps = std::make_unique<CFPSCounter>();
 
-	m_error_code.store(EFFECT_ERR_NONE);
-	m_state.store(EFFECT_THREAD_STATE_STARTING);
-	bool bIsRunning = m_isrunning.load();
+	m_error_code.store(EFFECT_ERR_NONE, std::memory_order_relaxed);
+	m_state.store(EFFECT_THREAD_STATE_STARTING, std::memory_order_relaxed);
+	bool bIsRunning = m_isrunning.load(std::memory_order_relaxed);
 
 	while (bIsRunning) {
 		if (m_greenscreen_mode) {
 			cv::VideoCapture cap;
 			if (cap.open("movies\\" + m_name)) {
 
-				m_state.store(EFFECT_THREAD_STATE_RUNNING);
+				m_state.store(EFFECT_THREAD_STATE_RUNNING, std::memory_order_relaxed);
 				double fps = cap.get(cv::CAP_PROP_FPS);
 				bool isFirstFrame = true;				
 				std::chrono::time_point<std::chrono::high_resolution_clock> ts;
@@ -331,24 +328,29 @@ void CDynamicFrame::FnLiveViewThread() {
 					cap >> frame;
 					if (!frame.empty()) {
 
-						m_framelock.lock();
+						try {
+							std::lock_guard<std::mutex> guard_l(m_framelock);
+							//m_framelock.lock();
 
-						std::string fps = pfps->GetFPSinString();
-						putText(frame, fps.c_str(), cv::Point(250, 50), cv::FONT_HERSHEY_SIMPLEX, 1.4, cv::Scalar(255, 0, 0), 4);
+							std::string fps = pfps->GetFPSinString();
+							putText(frame, fps.c_str(), cv::Point(250, 50), cv::FONT_HERSHEY_SIMPLEX, 1.4, cv::Scalar(255, 0, 0), 4);
 
-						if (m_frame_buffer.size() > 50) {
-							m_frame_buffer.erase(m_frame_buffer.begin());
-						}
-
-						if (m_width != -1 || m_height != -1) {
-							if (frame.cols != m_width || frame.rows != m_height) {
-								cv::resize(frame, frame, cv::Size(m_width, m_height));
+							if (m_frame_buffer.size() > 50) {
+								m_frame_buffer.erase(m_frame_buffer.begin());
 							}
+
+							if (m_width != -1 || m_height != -1) {
+								if (frame.cols != m_width || frame.rows != m_height) {
+									cv::resize(frame, frame, cv::Size(m_width, m_height));
+								}
+							}
+
+							m_frame_buffer.push_back(frame);
+							//m_framelock.unlock();
 						}
-
-						m_frame_buffer.push_back(frame);
-						m_framelock.unlock();
-
+						catch (...) {
+							//Log
+						}
 						if (isFirstFrame) {
 							isFirstFrame = false;
 						}
@@ -371,11 +373,11 @@ void CDynamicFrame::FnLiveViewThread() {
 						empty_frame_count++;
 						if (empty_frame_count > 5) {
 							empty_frame_count = 0;
-							m_error_code.store(EFFECT_ENDED);
+							m_error_code.store(EFFECT_ENDED, std::memory_order_relaxed);
 							break;
 						}
 					}
-					bIsRunning = m_isrunning.load();
+					bIsRunning = m_isrunning.load(std::memory_order_relaxed);
 				}
 				cap.release();
 				cv::destroyAllWindows();
@@ -403,34 +405,37 @@ void CDynamicFrame::FnLiveViewThread() {
 						ffmpeg.releaseFrame();
 					}
 					else if(ret== AVERROR_EOF){
-						m_error_code.store(EFFECT_ENDED);
+						m_error_code.store(EFFECT_ENDED, std::memory_order_relaxed);
 						break;
 					}
 					else if (ret == AVERROR(EAGAIN)) {
 						continue;
 					}
 					else {
-						m_error_code.store(EFFECT_ENDED);
+						m_error_code.store(EFFECT_ENDED, std::memory_order_relaxed);
 						break;
 					}
 					if (!frame.empty()) {
 
-						m_framelock.lock();
-
-						std::string fps = pfps->GetFPSinString();						
-						m_pLog->WriteToOCVScreen(fps.c_str(), 250, 50, 0, 255, 0, 255, frame);
-						if (m_frame_buffer.size() > 50) {
-							m_frame_buffer.erase(m_frame_buffer.begin());
-						}
-
-						if (m_width != -1 || m_height != -1) {
-							if (frame.cols != m_width || frame.rows != m_height) {
-								cv::resize(frame, frame, cv::Size(m_width, m_height));
+						try {
+							std::lock_guard<std::mutex> guard_l(m_framelock);
+							
+							std::string fps = pfps->GetFPSinString();
+							m_pLog->WriteToOCVScreen(fps.c_str(), 250, 50, 0, 255, 0, 255, frame);
+							if (m_frame_buffer.size() > 50) {
+								m_frame_buffer.erase(m_frame_buffer.begin());
 							}
-						}
-						m_frame_buffer.push_back(frame);
-						m_framelock.unlock();
 
+							if (m_width != -1 || m_height != -1) {
+								if (frame.cols != m_width || frame.rows != m_height) {
+									cv::resize(frame, frame, cv::Size(m_width, m_height));
+								}
+							}
+							m_frame_buffer.push_back(frame);
+						}
+						catch (...) {
+							//Log
+						}
 						if (isFirstFrame) {
 							isFirstFrame = false;
 						}
@@ -446,12 +451,10 @@ void CDynamicFrame::FnLiveViewThread() {
 							}
 						}
 						ts = std::chrono::high_resolution_clock::now();
-						//cv::imshow("TEST", frame);
-						//cv::waitKey(5);
 						std::this_thread::sleep_for(std::chrono::milliseconds(1));
 					}
 					else {
-						m_error_code.store(EFFECT_ERR_FILE_EMPTY_FRAME);
+						m_error_code.store(EFFECT_ERR_FILE_EMPTY_FRAME, std::memory_order_relaxed);
 						std::this_thread::sleep_for(std::chrono::milliseconds(5));
 						empty_frame_count++;
 						if (empty_frame_count > 5) {
@@ -459,17 +462,17 @@ void CDynamicFrame::FnLiveViewThread() {
 							break;
 						}
 					}
-					bIsRunning = m_isrunning.load();
+					bIsRunning = m_isrunning.load(std::memory_order_relaxed);
 				}
 				ffmpeg.closeStream();
 			}
 		}
-		bIsRunning = m_isrunning.load();
+		bIsRunning = m_isrunning.load(std::memory_order_relaxed);
 		if (!m_is_repeat)
 			break;
 	}	
 	m_pLog->AsyncWrite(m_pLog->string_format("Effect Alpha/Greenscreen [%s] exiting ...", m_name.c_str()).c_str(), true, true);
-	m_state.store(EFFECT_THREAD_STATE_EXITING);
+	m_state.store(EFFECT_THREAD_STATE_EXITING, std::memory_order_relaxed);
 }
 
 int CDynamicFrame::GrabMostRecentFrame(cv::Mat& frame) {
@@ -484,7 +487,7 @@ int CDynamicFrame::GrabMostRecentFrame(cv::Mat& frame) {
 }
 
 int CDynamicFrame::GetState() {
-	return m_state.load();
+	return m_state.load(std::memory_order_relaxed);
 }
 
 void CDynamicFrame::overlayImage(const cv::Mat &background, const cv::Mat &foreground, cv::Mat &output, cv::Point2i location)
@@ -526,12 +529,13 @@ void CDynamicFrame::overlayImage(const cv::Mat &background, const cv::Mat &foreg
 	}
 }
 
-CBackGorundRemoval::CBackGorundRemoval(const char* name, std::shared_ptr<CLogManager> log, int rl, int gl, int bl, int rh, int gh, int bh) :CBaseEffect(name, log) {
+//CBackGorundRemoval::CBackGorundRemoval(const char* name, std::shared_ptr<CLogManager> log, int rl, int gl, int bl, int rh, int gh, int bh) :CBaseEffect(name, log) {
+CBackGorundRemoval::CBackGorundRemoval(const char* name, int rl, int gl, int bl, int rh, int gh, int bh) :CBaseEffect(name) {
 	m_stack_effect_index = STACK_INDEX_BG_REMOVAL;
 	m_low = cv::Scalar(bl, gl, rl);
 	m_hi = cv::Scalar(bh, gh, rh);	
 
-	m_state.store(EFFECT_THREAD_STATE_IDLE);
+	m_state.store(EFFECT_THREAD_STATE_IDLE, std::memory_order_relaxed);
 	m_bg = cv::imread("backgrounds\\" + m_name, -1);
 	if (m_width != -1 || m_height != -1) {
 		if (m_width != m_bg.cols || m_height != m_bg.rows)
@@ -539,14 +543,15 @@ CBackGorundRemoval::CBackGorundRemoval(const char* name, std::shared_ptr<CLogMan
 	}
 }
 
-CBackGorundRemoval::CBackGorundRemoval(const char* name, std::shared_ptr<CLogManager> log, int rl, int gl, int bl, int rh, int gh, int bh, bool is_static, bool repeat) :CBaseEffect(name, log)
+//CBackGorundRemoval::CBackGorundRemoval(const char* name, std::shared_ptr<CLogManager> log, int rl, int gl, int bl, int rh, int gh, int bh, bool is_static, bool repeat) :CBaseEffect(name, log)
+CBackGorundRemoval::CBackGorundRemoval(const char* name, int rl, int gl, int bl, int rh, int gh, int bh, bool is_static, bool repeat) :CBaseEffect(name)
 	, m_is_static(is_static), m_is_repeat(repeat)
 {
 	m_stack_effect_index = STACK_INDEX_BG_REMOVAL;
 	m_low = cv::Scalar(bl, gl, rl);
 	m_hi = cv::Scalar(bh, gh, rh);
 
-	m_state.store(EFFECT_THREAD_STATE_IDLE);
+	m_state.store(EFFECT_THREAD_STATE_IDLE, std::memory_order_relaxed);
 	if (m_is_static) {
 		m_bg = cv::imread("backgrounds\\" + m_name, -1);
 		if (m_width != -1 || m_height != -1) {
@@ -555,21 +560,22 @@ CBackGorundRemoval::CBackGorundRemoval(const char* name, std::shared_ptr<CLogMan
 		}
 	}
 	else {
-		m_total_frames_processed.store(0);
-		m_total_frame_count.store(0);
-		m_isrunning.store(true);
+		m_total_frames_processed.store(0, std::memory_order_relaxed);
+		m_total_frame_count.store(0, std::memory_order_relaxed);
+		m_isrunning.store(true, std::memory_order_relaxed);
 		m_liveview_thread = std::thread(&CBackGorundRemoval::FnLiveViewThread, this);
 	}
 }
 
-CBackGorundRemoval::CBackGorundRemoval(const char* name, std::shared_ptr<CLogManager> log, int rl, int gl, int bl, int rh, int gh, int bh, bool is_static, int width, int height, bool repeat) :CBaseEffect(name, log), m_is_static(is_static)
+//CBackGorundRemoval::CBackGorundRemoval(const char* name, std::shared_ptr<CLogManager> log, int rl, int gl, int bl, int rh, int gh, int bh, bool is_static, int width, int height, bool repeat) :CBaseEffect(name, log), m_is_static(is_static)
+CBackGorundRemoval::CBackGorundRemoval(const char* name, int rl, int gl, int bl, int rh, int gh, int bh, bool is_static, int width, int height, bool repeat) :CBaseEffect(name), m_is_static(is_static)
 , m_width(width), m_height(height), m_is_repeat(repeat)
 {
 	m_stack_effect_index = STACK_INDEX_BG_REMOVAL;
 	m_low = cv::Scalar(bl, gl, rl);
 	m_hi = cv::Scalar(bh, gh, rh);	
 
-	m_state.store(EFFECT_THREAD_STATE_IDLE);
+	m_state.store(EFFECT_THREAD_STATE_IDLE, std::memory_order_relaxed);
 	if (m_is_static) {
 		m_bg = cv::imread("backgrounds\\" + m_name, -1);
 		if (m_width != -1 || m_height != -1) {
@@ -578,14 +584,15 @@ CBackGorundRemoval::CBackGorundRemoval(const char* name, std::shared_ptr<CLogMan
 		}
 	}
 	else {				
-		m_total_frames_processed.store(0);
-		m_total_frame_count.store(0);
-		m_isrunning.store(true);
+		m_total_frames_processed.store(0, std::memory_order_relaxed);
+		m_total_frame_count.store(0, std::memory_order_relaxed);
+		m_isrunning.store(true, std::memory_order_relaxed);
 		m_liveview_thread = std::thread(&CBackGorundRemoval::FnLiveViewThread, this);
 	}
 }
 
-CBackGorundRemoval::CBackGorundRemoval(const char* name, std::shared_ptr<CLogManager> log, bool is_static, bool is_greenscreen, int width, int height, bool repeat, cv::Mat& frame) : CBaseEffect(name, log), m_is_static(is_static)
+//CBackGorundRemoval::CBackGorundRemoval(const char* name, std::shared_ptr<CLogManager> log, bool is_static, bool is_greenscreen, int width, int height, bool repeat, cv::Mat& frame) : CBaseEffect(name, log), m_is_static(is_static)
+CBackGorundRemoval::CBackGorundRemoval(const char* name, bool is_static, bool is_greenscreen, int width, int height, bool repeat, cv::Mat& frame) : CBaseEffect(name), m_is_static(is_static)
 , m_width(width), m_height(height), m_is_repeat(repeat), m_is_greenscreen(is_greenscreen)
 {
 	m_stack_effect_index = STACK_INDEX_BG_REMOVAL;
@@ -606,9 +613,9 @@ CBackGorundRemoval::CBackGorundRemoval(const char* name, std::shared_ptr<CLogMan
 		}
 	}
 	else {
-		m_total_frames_processed.store(0);
-		m_total_frame_count.store(0);
-		m_isrunning.store(true);
+		m_total_frames_processed.store(0, std::memory_order_relaxed);
+		m_total_frame_count.store(0, std::memory_order_relaxed);
+		m_isrunning.store(true, std::memory_order_relaxed);
 		m_liveview_thread = std::thread(&CBackGorundRemoval::FnLiveViewThread, this);
 	}
 }
@@ -639,7 +646,7 @@ int CBackGorundRemoval::filter(cv::Mat& frame) {
 	
 	cv::Mat tmp;
 
-	if(m_total_frames_processed.load()>m_total_frame_count.load() - 5)
+	if(m_total_frames_processed.load(std::memory_order_relaxed)>m_total_frame_count.load(std::memory_order_relaxed) - 5)
 		tmp = layer.clone();
 	else
 		tmp = layer;
@@ -666,26 +673,27 @@ void CBackGorundRemoval::FnLiveViewThread() {
 
 	std::unique_ptr<CFPSCounter> pfps = std::make_unique<CFPSCounter>();
 
-	m_error_code.store(EFFECT_ERR_NONE);
-	m_state.store(EFFECT_THREAD_STATE_STARTING);
-	bool bIsRunning = m_isrunning.load();
+	m_error_code.store(EFFECT_ERR_NONE, std::memory_order_relaxed);
+	m_state.store(EFFECT_THREAD_STATE_STARTING, std::memory_order_relaxed);
+	//bool bIsRunning = m_isrunning.load(std::memory_order_relaxed);
 	
-	m_total_frames_processed.store(0);
-	m_total_frame_count.store(0);	
+	m_total_frames_processed.store(0, std::memory_order_relaxed);
+	m_total_frame_count.store(0, std::memory_order_relaxed);
 
-	while (bIsRunning) {
+	while (m_isrunning.load(std::memory_order_relaxed)) {
 		cv::VideoCapture cap;
 		if (cap.open("movies\\" + m_name)) {
 
-			m_state.store(EFFECT_THREAD_STATE_RUNNING);
+			m_state.store(EFFECT_THREAD_STATE_RUNNING, std::memory_order_relaxed);
 			double fps = cap.get(cv::CAP_PROP_FPS);
 			bool isFirstFrame = true;			
 			std::chrono::time_point<std::chrono::high_resolution_clock> ts;
 			double f_delay_per = 1000.0 / fps;
 
-			m_total_frame_count.store((int)cap.get(cv::CAP_PROP_FRAME_COUNT));
+			m_total_frame_count.store((int)cap.get(cv::CAP_PROP_FRAME_COUNT), std::memory_order_relaxed);
 
-			while (bIsRunning) {
+			//while (bIsRunning) {
+			while (m_isrunning.load(std::memory_order_relaxed)) {
 				cv::Mat frame;
 				cap >> frame;
 				if (!frame.empty()) {
@@ -730,24 +738,25 @@ void CBackGorundRemoval::FnLiveViewThread() {
 				else {
 					//m_error_code.store(EFFECT_ERR_FILE_EMPTY_FRAME);
 					std::this_thread::sleep_for(std::chrono::milliseconds(5));
-					m_error_code.store(EFFECT_ENDED);
+					m_error_code.store(EFFECT_ENDED, std::memory_order_relaxed);
 					break;					
 				}
-				bIsRunning = m_isrunning.load();
+				//bIsRunning = m_isrunning.load(std::memory_order_relaxed);
 			}
 
 			cap.release();
 			cv::destroyAllWindows();
 		}
-		bIsRunning = m_isrunning.load();
+		//bIsRunning = m_isrunning.load(std::memory_order_relaxed);
 		if (!m_is_repeat)
 			break;
 	}	
 	m_pLog->AsyncWrite(m_pLog->string_format("Effect BG Removal [%s] exiting ...", m_name.c_str()).c_str(), true, true);
-	m_state.store(EFFECT_THREAD_STATE_EXITING);
+	m_state.store(EFFECT_THREAD_STATE_EXITING, std::memory_order_relaxed);
 }
 
-CClassicFaceDetect::CClassicFaceDetect(const char* name, std::shared_ptr<CLogManager> log, double confidence, int minimum_size) : CBaseEffect(name, log), m_confidence_threshold(confidence), m_minimum_size(minimum_size)
+//CClassicFaceDetect::CClassicFaceDetect(const char* name, std::shared_ptr<CLogManager> log, double confidence, int minimum_size) : CBaseEffect(name, log), m_confidence_threshold(confidence), m_minimum_size(minimum_size)
+CClassicFaceDetect::CClassicFaceDetect(const char* name, double confidence, int minimum_size) : CBaseEffect(name), m_confidence_threshold(confidence), m_minimum_size(minimum_size)
 {
 	m_stack_effect_index = STACK_INDEX_ACC;
 #ifdef _WIN32
@@ -760,7 +769,9 @@ CClassicFaceDetect::CClassicFaceDetect(const char* name, std::shared_ptr<CLogMan
 	m_state.store(EFFECT_THREAD_STATE_IDLE);
 }
 
-CClassicFaceDetect::CClassicFaceDetect(const char* name, std::shared_ptr<CLogManager> log, double confidence, int minimum_size, int stack_index):CBaseEffect(name, log, stack_index), m_confidence_threshold(confidence), m_minimum_size(minimum_size)
+//CClassicFaceDetect::CClassicFaceDetect(const char* name, std::shared_ptr<CLogManager> log, double confidence, int minimum_size, int stack_index):CBaseEffect(name, log, stack_index), m_confidence_threshold(confidence), m_minimum_size(minimum_size)
+CClassicFaceDetect::CClassicFaceDetect(const char* name, double confidence, int minimum_size, int stack_index) :
+	CBaseEffect(name, stack_index), m_confidence_threshold(confidence), m_minimum_size(minimum_size)
 {
 #ifdef _WIN32
 	m_cascade_face.load("models\\haarcascade_frontalface_alt.xml");
@@ -770,15 +781,15 @@ CClassicFaceDetect::CClassicFaceDetect(const char* name, std::shared_ptr<CLogMan
 	m_overlay = cv::imread("overlays/" + m_name, -1);
 #endif
 
-	m_state.store(EFFECT_THREAD_STATE_IDLE);
+	m_state.store(EFFECT_THREAD_STATE_IDLE, std::memory_order_relaxed);
 }
 
 #define FACE_FRAME_COUNT 5
 
 int CClassicFaceDetect::FnDetectionThread(cv::Mat frame) {
 	
-	m_state.store(EFFECT_THREAD_STATE_STARTING);
-	m_state.store(EFFECT_THREAD_STATE_RUNNING);	
+	m_state.store(EFFECT_THREAD_STATE_STARTING, std::memory_order_relaxed);
+	m_state.store(EFFECT_THREAD_STATE_RUNNING, std::memory_order_relaxed);
 
 	cv::Mat gray, smallImg;
 	cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
@@ -796,7 +807,7 @@ int CClassicFaceDetect::FnDetectionThread(cv::Mat frame) {
 		m_cascade_face.detectMultiScale(smallImg, detectedFaces, reject, confidence, 1.1, 2, 0 | cv::CASCADE_SCALE_IMAGE, cv::Size(m_minimum_size, m_minimum_size), cv::Size(), true);		
 	}
 	catch (...) {		
-			m_state.store(EFFECT_THREAD_STATE_EXITING);
+			m_state.store(EFFECT_THREAD_STATE_EXITING, std::memory_order_relaxed);
 		return -1;
 	}
 
@@ -888,7 +899,7 @@ int CClassicFaceDetect::FnDetectionThread(cv::Mat frame) {
 	m_framelock.unlock();
 	std::this_thread::sleep_for(std::chrono::milliseconds(250));
 	
-	m_state.store(EFFECT_THREAD_STATE_EXITING);
+	m_state.store(EFFECT_THREAD_STATE_EXITING, std::memory_order_relaxed);
 	return 0;
 }
 
@@ -921,8 +932,7 @@ int CClassicFaceDetect::DetectFaceNonThreaded(cv::Mat& frame, std::vector<LANDMA
 	}
 	for (int i = 0; i < (int)detectedFaces.size(); i++) {
 		LANDMARK x;
-	//	x.face = detectedFaces[i];
-
+	
 		x.face.x = detectedFaces[i].x * 2;
 		x.face.y = detectedFaces[i].y * 2;
 		x.face.width = detectedFaces[i].width * 2;
@@ -952,7 +962,7 @@ int CClassicFaceDetect::filter(cv::Mat& frame) {
 		return 0;
 	}
 	else {
-		int state = m_state.load();
+		int state = m_state.load(std::memory_order_relaxed);
 		if (state == EFFECT_THREAD_STATE_EXITING || state == EFFECT_THREAD_STATE_IDLE) {
 			if (state == EFFECT_THREAD_STATE_EXITING)
 				m_detection_future.get();

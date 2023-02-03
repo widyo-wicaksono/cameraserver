@@ -6,7 +6,6 @@
 #include "LogManager.h"
 
 #include <vector>
-//#include <chrono>
 
 #define FC_MAX_FPS 25
 #define FC_DELAY_BETWEEN_FRAMES 40
@@ -48,7 +47,6 @@ private:
 	std::vector<int> m_fpses;
 	std::vector<FrameData> m_frame_datas;
 	
-	std::shared_ptr<CLogManager> m_pLog = nullptr;
 	std::shared_ptr<CBaseServer> m_pClientCon;
 	std::mutex m_lock;
 	void* m_lp_connection;
@@ -65,6 +63,8 @@ private:
 	bool m_bIsRecording = false;
 	bool m_bIsAsyncTaskInProgress = false;
 	cv::Mat m_bg_sub;
+
+	CLogManager* m_pLog = nullptr;
 
 	int FindLocalMediaSource(CBaseMediaSource::SourceType& mediatype, std::string& id);
 	int GetGlobalMediaRefCount(const CBaseMediaSource::SourceType& mediatype, const std::string& id);
@@ -87,7 +87,7 @@ private:
 	void GenerateUniqueName(std::string& name, const char* mediatypename, const char* id, const char* afix);	
 
 public:		
-	CFrameControl(std::shared_ptr<CBaseServer> pServer, void* lp_connection, std::shared_ptr<CLogManager> log);
+	CFrameControl(std::shared_ptr<CBaseServer> pServer, void* lp_connection);
 	~CFrameControl() {
 		m_running.store(false);
 		if (m_thread.joinable())
@@ -98,8 +98,7 @@ public:
 	std::thread m_thread;
 
 	int Run();	
-	void SetLog(std::shared_ptr<CLogManager> log);
-	void WriteLog(std::string data);
+	
 	void* GetID();
 
 	void GetRBGLimit(int& rl, int& gl, int& bl, int& rh, int& gh, int& bh);

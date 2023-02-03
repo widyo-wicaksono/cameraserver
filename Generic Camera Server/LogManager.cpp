@@ -167,17 +167,14 @@ int CLogManager::WriteNote(const char* path, const char* data) {
 }
 
 void CLogManager::AsyncWrite(const char* data, bool bIsGenerateTimeStamps, bool bIsWritingToStdOutput) {
-	m_mutex.lock();
+	std::lock_guard<std::mutex> lck(m_mutex);
 	Write(data, bIsGenerateTimeStamps);
 	if (bIsWritingToStdOutput) {
 		std::cout << data << std::endl;
 	}
-	m_mutex.unlock();
 }
 
 std::string CLogManager::string_format(const std::string fmt_str, ...) {
-//std::string CLogManager::string_format(const char* str, ...) {
-	//std::string fmt_str = std::move(str);
 	int final_n, n = ((int)fmt_str.size()) * 2; /* Reserve two times as much as the length of the fmt_str */
 	std::unique_ptr<char[]> formatted;
 	va_list ap;
@@ -207,7 +204,11 @@ void CLogManager::WriteToOCVScreen(const char* text, int x, int y, int b, int g,
 }
 
 void CLogManager::SetFPSOutput(bool is_fps) {
-	m_mutex.lock();
-	m_bIsOutputFPS = is_fps;
-	m_mutex.unlock();
+	try {
+		std::lock_guard<std::mutex> guard_l(m_mutex);
+		m_bIsOutputFPS = is_fps;
+	}
+	catch (...) {
+		//Log
+	}
 }

@@ -22,10 +22,11 @@ public:
 		_ConnectionMessage(DataDirection flow_, void* conn_, std::string data_):flow(flow_), lp_connection(conn_), data(std::move(data_))
 		{};
 	};	
-
+	CBaseServer() {
+		m_pLog = CLogManager::getInstance();
+	}
 protected:	
-	std::shared_ptr<CLogManager> m_pLog = nullptr;
-
+	
 	std::vector<_ConnectionMessage> m_inbound;
 	std::vector<_ConnectionMessage> m_outbound;
 	std::vector<_ConnectionMessage> m_internal_connection_list;
@@ -34,13 +35,15 @@ protected:
 	std::vector<void*> m_disconnected_connections;
 	
 	std::thread  m_thread;
-	std::atomic<ConnectionThreadState> m_thread_status;	
+	
 	std::atomic<bool> m_is_running;
 
 	std::mutex m_inbound_lock;
 	std::mutex m_outbound_lock;
 	std::mutex m_connection_lock;
 
+	
+	CLogManager* m_pLog = nullptr;
 	virtual int Init() { return 0; };
 	virtual int Uninit() { return 0; };
 
@@ -52,7 +55,7 @@ public:
 	virtual void FnConnectionThread() {};
 
 	int AsyncGetMessage(_ConnectionMessage& message);
-	int AsyncPutMessage(_ConnectionMessage& message);	
+	int AsyncPutMessage(const _ConnectionMessage& message);	
 
 	bool AsyncGetNewConnection(void** lp_connection);
 	bool AsyncGetDisconnectedConnection(void** lp_connection);
@@ -79,7 +82,6 @@ protected:
 	int Uninit();
 
 public:		
-	CWSServer(std::shared_ptr<CLogManager> log);
 	~CWSServer();
 	
 	std::vector<unsigned int> sockets;
@@ -91,7 +93,7 @@ public:
 	void SignalStop(bool signal);	
 	void FnConnectionThread();
 
-	int SendWSData(std::string& datatosend, struct lws * wsi);
+	int SendWSData(const std::string& datatosend, struct lws * wsi);
 
 	void AsyncAddMessageToQueue(const _ConnectionMessage& message);
 	bool AsyncGetMessageFromQueue(_ConnectionMessage& message);

@@ -1,9 +1,7 @@
 #include "pch.h"
 #include "MediaServer.h"
 
-
-
-CMJPEGMediaServer::CMJPEGMediaServer(std::shared_ptr<CLogManager> log, double scale) :CBaseMediaServer(log, scale) {
+CMJPEGMediaServer::CMJPEGMediaServer(double scale) :CBaseMediaServer(scale) {
 	FD_ZERO(&m_master);		
 	m_IsRunning.store(true);
 }
@@ -53,7 +51,7 @@ bool CMJPEGMediaServer::isOpened()
 
 int CMJPEGMediaServer::Write(const cv::Mat & frame)
 {
-	putFrame(frame);
+	putFrame(frame);		
 	m_cv.notify_one();
 	return 0;
 }
@@ -91,10 +89,14 @@ int CMJPEGMediaServer::_write(int sock, const char *s, int len)
 
 void CMJPEGMediaServer::WriteToClientEx()
 {
-	while (m_IsRunning.load()) {
-		m_mxLoop.lock();
-		m_cv.wait(m_mxLoop);
-		m_mxLoop.unlock();
+	while (m_IsRunning.load(std::memory_order_relaxed)) {
+		try {
+			std::lock_guard<std::mutex> guard_l(m_mxLoop);
+			m_cv.wait(m_mxLoop);
+		}
+		catch (...) {
+			//Log
+		}
 		fd_set rread = m_master;
 		struct timeval to = { 0, m_timeout };
 		SOCKET maxfd = m_sock + 1;
@@ -110,13 +112,16 @@ void CMJPEGMediaServer::WriteToClientEx()
 		params.push_back(cv::IMWRITE_JPEG_QUALITY);
 		params.push_back(m_quality);
 
-		m_mxData.lock();		
-		if (m_scale != 1.0) {
-			cv::resize(m_frame, m_frame, cv::Size(), m_scale, m_scale);
+		try {
+			std::lock_guard<std::mutex> guard_l(m_mxData);
+			if (m_scale != 1.0) {
+				cv::resize(m_frame, m_frame, cv::Size(), m_scale, m_scale);
+			}
+			cv::imencode(".jpg", m_frame, outbuf, params);
 		}
-		cv::imencode(".jpg", m_frame, outbuf, params);
-		m_mxData.unlock();
-
+		catch (...) {
+			//Log
+		}
 		int outlen = (int)outbuf.size();
 
 #ifdef _WIN32 
@@ -293,15 +298,17 @@ int CMJPEGMediaServer::WriteToClient(const cv::Mat frame)
 			}
 		}		
 	}
-	//cv::imshow("Webcam", frm);
-	//cv::waitKey(1);
-
+	
 	return 0;
 }
 
 int CMJPEGMediaServer::putFrame(const cv::Mat frame) {
-	m_mxData.lock();
-	m_frame = frame.clone();
-	m_mxData.unlock();
+	try {
+		std::lock_guard<std::mutex> guard_l(m_mxData);
+		m_frame = frame.clone();
+	}
+	catch (...) {
+		//Log
+	}
 	return 0;
 }

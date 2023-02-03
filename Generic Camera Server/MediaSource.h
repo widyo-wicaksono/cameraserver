@@ -44,10 +44,11 @@ protected:
 		void* pConnection = nullptr;
 	};
 
-	std::vector<cv::Mat> m_frame_buffer;	
+	std::list<cv::Mat> m_frame_buffer;
+
 	std::vector<CommandData> m_op_res;
 
-	std::shared_ptr<CLogManager> m_pLog = nullptr;
+	CLogManager* m_pLog = nullptr;
 
 	std::atomic<bool> m_isrunning;
 	std::atomic<int> m_error_code;
@@ -72,9 +73,9 @@ protected:
 	void SetError(int code_);
 
 public:		
-	
-	CBaseMediaSource(std::shared_ptr<CLogManager> log);
-	CBaseMediaSource(std::shared_ptr<CLogManager> log, int width, int height, bool is_landscape);
+
+	CBaseMediaSource();
+	CBaseMediaSource(int width, int height, bool is_landscape);
 
 	virtual ~CBaseMediaSource() {};
 	virtual int StartLiveView() { return 0; };
@@ -105,8 +106,8 @@ private:
 public:
 	~CWebcamSource();	
 	
-	CWebcamSource(std::string& index, std::shared_ptr<CLogManager> log);
-	CWebcamSource(std::string& index, std::shared_ptr<CLogManager> log, int width, int height, bool is_landscape);
+	CWebcamSource(std::string& index);
+	CWebcamSource(std::string& index, int width, int height, bool is_landscape);
 
 	void FnLiveViewThread();
 	int StartLiveView();	
@@ -122,8 +123,8 @@ private:
 public:
 	~CIPCam();
 	
-	CIPCam(std::string& address, std::shared_ptr<CLogManager> log);
-	CIPCam(std::string& address, std::shared_ptr<CLogManager> log, int width, int height, bool is_landscape);
+	CIPCam(std::string& address);
+	CIPCam(std::string& address, int width, int height, bool is_landscape);
 
 	void FnLiveViewThread();
 	int StartLiveView();	

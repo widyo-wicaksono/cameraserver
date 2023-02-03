@@ -14,10 +14,10 @@ std::mutex CFrameControl::m_created_media_sources_lock;
 std::atomic<int> CFrameControl::m_media_server_port(7000);
 std::atomic<int> CFrameControl::m_broadcasted_error_count(0);
 
-CFrameControl::CFrameControl(std::shared_ptr<CBaseServer> pServer, void* lp_connection, std::shared_ptr<CLogManager> log) : m_pClientCon(pServer), m_lp_connection(lp_connection), m_pLog(log)
+CFrameControl::CFrameControl(std::shared_ptr<CBaseServer> pServer, void* lp_connection) : m_pClientCon(pServer), m_lp_connection(lp_connection)
 {
 	m_running.store(true);		
-	
+	m_pLog = CLogManager::getInstance();
 	m_pLog->AsyncWrite(m_pLog->string_format("Frame Control [0x%08x] is created", m_lp_connection).c_str(), true, true);
 }
 
@@ -33,19 +33,19 @@ int CFrameControl::Run() {
 }
 
 void CFrameControl::FnControlThread() {
-	std::unique_ptr<CFPSCounter> pfps = std::make_unique<CFPSCounter>();
-	bool bIsRunning = m_running.load();		
+	
+	std::unique_ptr<CFPSCounter> pfps = std::make_unique<CFPSCounter>();	
 	m_pLog->AsyncWrite(m_pLog->string_format("Frame Control [0x%08x] is running", m_lp_connection).c_str(), true, true);
 	
 	std::chrono::time_point<std::chrono::high_resolution_clock> frame_ts = std::chrono::high_resolution_clock::now();
 
-	while (bIsRunning) {
+	while (m_running.load(std::memory_order_relaxed)) {
 		
 		CBaseServer::_ConnectionMessage out_message(CBaseServer::_ConnectionMessage::DataDirection::outbound, m_lp_connection, "");
 		std::string buffer;
 				
 		for (auto& source : m_sources) {
-			//int error_code = source.pMedia->GetError();
+			
 			int error_code = 0;
 			int error_count = 0;
 			source.pMedia->GetError(error_code, error_count);
@@ -64,11 +64,11 @@ void CFrameControl::FnControlThread() {
 				m_pClientCon->AsyncPutMessage(out_message);				
 				m_last_error_count= error_count;
 
-				m_broadcasted_error_count.fetch_add(1);
+				m_broadcasted_error_count.fetch_add(1, std::memory_order_relaxed);
 				int ref_count = GetGlobalMediaRefCount(mediatype, source.pMedia->GetID());
-				if (ref_count == m_broadcasted_error_count.load()) {
+				if (ref_count == m_broadcasted_error_count.load(std::memory_order_relaxed)) {
 					source.pMedia->ResetError();
-					m_broadcasted_error_count.store(0);
+					m_broadcasted_error_count.store(0, std::memory_order_relaxed);
 				}
 			}			
 		}
@@ -138,7 +138,6 @@ void CFrameControl::FnControlThread() {
 		
 
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
-		bIsRunning = m_running.load();
 	}
 	SyncUpGlobalMediaSourceList();
 }
@@ -328,25 +327,20 @@ void CFrameControl::ProcessCommand(std::string& data, std::string& res) {
 		else if (mediatype == CBaseMediaSource::SourceType::webcam) {			
 			std::shared_ptr<CBaseMediaSource> ptrMedia = CheckExistingMediaSource(mediatype, source_id);				
 			if (ptrMedia == nullptr) {								
-				m_pLog->AsyncWrite(m_pLog->string_format("Frame Control [0x%08x] No existing media sources [%s] found, creating new ...", m_lp_connection, mediatypename.c_str()).c_str(), true, true);
-
-				m_created_media_sources_lock.lock();	
-				
+				m_pLog->AsyncWrite(m_pLog->string_format("Frame Control [0x%08x] No existing media sources [%s] found, creating new ...", m_lp_connection, mediatypename.c_str()).c_str(), true, true);					
 				MediaSourceTask x;
-				if(document.HasMember("width"))
-					x.pMedia = std::make_shared<CWebcamSource>(source_id, m_pLog, document["width"].GetInt(), document["height"].GetInt(), document["landscape"].GetBool());
+				if (document.HasMember("width"))
+					x.pMedia = std::make_shared<CWebcamSource>(source_id, document["width"].GetInt(), document["height"].GetInt(), document["landscape"].GetBool());
 				else
-					x.pMedia = std::make_shared<CWebcamSource>(source_id, m_pLog);
+					x.pMedia = std::make_shared<CWebcamSource>(source_id);
 				m_sources.push_back(x);
-
-				/*
-				MediaSourceInfo minfo;					
-				minfo.pMedia = m_sources[m_sources.size() - 1].pMedia ;
-				minfo.m_source_ref_count = 1;
-				m_created_media_sources.push_back(minfo);
-					*/
-				m_created_media_sources.emplace_back(m_sources[m_sources.size() - 1].pMedia, 1);
-				m_created_media_sources_lock.unlock();									
+				try {
+					std::lock_guard<std::mutex> guard_l(m_created_media_sources_lock);
+					m_created_media_sources.emplace_back(m_sources[m_sources.size() - 1].pMedia, 1);
+				}
+				catch (...) {
+					//Log something
+				}
 				m_pLog->AsyncWrite("Done", true, true);
 			}
 			else {									
@@ -362,24 +356,22 @@ void CFrameControl::ProcessCommand(std::string& data, std::string& res) {
 		else if (mediatype == CBaseMediaSource::SourceType::ipcam) {
 			std::shared_ptr<CBaseMediaSource> ptrMedia = CheckExistingMediaSource(mediatype, source_id);
 			if (ptrMedia == nullptr) {				
-				m_pLog->AsyncWrite(m_pLog->string_format("Frame Control [0x%08x] No existing media sources [%s] found, creating new ...", m_lp_connection, mediatypename.c_str()).c_str(), true, true);
-
-				m_created_media_sources_lock.lock();				
+				m_pLog->AsyncWrite(m_pLog->string_format("Frame Control [0x%08x] No existing media sources [%s] found, creating new ...", m_lp_connection, mediatypename.c_str()).c_str(), true, true);			
 				MediaSourceTask x;
 
 				if (document.HasMember("width"))
-					x.pMedia = std::make_shared<CIPCam>(source_id, m_pLog, document["width"].GetInt(), document["height"].GetInt(), document["landscape"].GetBool());
+					x.pMedia = std::make_shared<CIPCam>(source_id, document["width"].GetInt(), document["height"].GetInt(), document["landscape"].GetBool());
 				else
-					x.pMedia = std::make_shared<CIPCam>(source_id, m_pLog);
+					x.pMedia = std::make_shared<CIPCam>(source_id);
 				m_sources.push_back(x);
-				/*
-				MediaSourceInfo minfo;
-				minfo.pMedia = m_sources[m_sources.size() - 1].pMedia;
-				minfo.m_source_ref_count = 1;
-				m_created_media_sources.push_back(minfo);
-				*/
-				m_created_media_sources.emplace_back(m_sources[m_sources.size() - 1].pMedia, 1);
-				m_created_media_sources_lock.unlock();				
+				
+				try {
+					std::lock_guard<std::mutex> guard_l(m_created_media_sources_lock);
+					m_created_media_sources.emplace_back(m_sources[m_sources.size() - 1].pMedia, 1);
+				}
+				catch (...) {
+					//Log something
+				}
 				m_pLog->AsyncWrite("Done", true, true);
 			}
 			else {				
@@ -743,14 +735,18 @@ void CFrameControl::ProcessCommand(std::string& data, std::string& res) {
 }
 
 int CFrameControl::GetGlobalMediaRefCount(const CBaseMediaSource::SourceType& mediatype, const std::string& id) {
-	m_created_media_sources_lock.lock();
-	int ret = -1;	
-	for (int i = 0; i < (int)m_created_media_sources.size(); i++) {
-		if (m_created_media_sources[i].pMedia->GetID() == id && m_created_media_sources[i].pMedia->GetType() == mediatype) {
-			ret = m_created_media_sources[i].m_source_ref_count;
+	int ret = -1;
+	try {
+		std::lock_guard<std::mutex> guard_l(m_created_media_sources_lock);
+		for (int i = 0; i < (int)m_created_media_sources.size(); i++) {
+			if (m_created_media_sources[i].pMedia->GetID() == id && m_created_media_sources[i].pMedia->GetType() == mediatype) {
+				ret = m_created_media_sources[i].m_source_ref_count;
+			}
 		}
 	}
-	m_created_media_sources_lock.unlock();
+	catch (...) {
+		//Write log
+	}
 	return ret;
 }
 
@@ -900,29 +896,35 @@ void CFrameControl::GenerateJSONEvent(const char* event_id, const char* event, i
 }
 
 void CFrameControl::GlobalMediaSourceListAddRef(CBaseMediaSource::SourceType& mediatype, std::string& id) {
-	m_created_media_sources_lock.lock();
-
-	for (int i = 0; i < (int)m_created_media_sources.size(); i++) {
-		if (m_created_media_sources[i].pMedia->GetID() == id && m_created_media_sources[i].pMedia->GetType() == mediatype) {
-			m_created_media_sources[i].m_source_ref_count++;
-			break;
+	try {
+		std::lock_guard<std::mutex> guard_l(m_created_media_sources_lock);
+		for (int i = 0; i < (int)m_created_media_sources.size(); i++) {
+			if (m_created_media_sources[i].pMedia->GetID() == id && m_created_media_sources[i].pMedia->GetType() == mediatype) {
+				m_created_media_sources[i].m_source_ref_count++;
+				break;
+			}
 		}
 	}
-
-	m_created_media_sources_lock.unlock();
+	catch (...){
+		//log
+	}
 }
 
-std::shared_ptr<CBaseMediaSource> CFrameControl::CheckExistingMediaSource(CBaseMediaSource::SourceType& mediatype, std::string& id) {
-	m_created_media_sources_lock.lock();			
+std::shared_ptr<CBaseMediaSource> CFrameControl::CheckExistingMediaSource(CBaseMediaSource::SourceType& mediatype, std::string& id) {			
 	std::shared_ptr<CBaseMediaSource> p = nullptr;
+	try {
+		std::lock_guard<std::mutex> guard_l(m_created_media_sources_lock);
 
-	for (int i = 0; i < (int)m_created_media_sources.size(); i++) {		
-		if (  m_created_media_sources[i].pMedia->GetID() == id && m_created_media_sources[i].pMedia->GetType() == mediatype) {			
-			p = m_created_media_sources[i].pMedia;			
-			break;
+		for (int i = 0; i < (int)m_created_media_sources.size(); i++) {			
+			if (m_created_media_sources[i].pMedia->GetID() == id && m_created_media_sources[i].pMedia->GetType() == mediatype) {
+				p = m_created_media_sources[i].pMedia;			
+				break;
+			}
 		}
-	}	
-	m_created_media_sources_lock.unlock();
+	}
+	catch (...){
+		//log
+	}
 	return p;
 }
 
@@ -931,35 +933,31 @@ void* CFrameControl::GetID() {
 }
 
 void CFrameControl::SyncUpGlobalMediaSourceList() {
-	m_created_media_sources_lock.lock();
-	for (auto& globalsource : m_created_media_sources) {		
-		for (auto localsource : m_sources) {
-			if (localsource.pMedia->GetID() == globalsource.pMedia->GetID() && localsource.pMedia->GetType() == globalsource.pMedia->GetType())
-				globalsource.m_source_ref_count--;
-		}		
-	}
-	bool is_zero_ref_count_exist;
-	while (true) {
-		is_zero_ref_count_exist = false;
-		for (int i = 0; i < (int)m_created_media_sources.size(); i++) {
-			if (m_created_media_sources[i].m_source_ref_count == 0) {
-				m_created_media_sources.erase(m_created_media_sources.begin() + i);
-				is_zero_ref_count_exist = true;
-				break;
+	try {
+		std::lock_guard<std::mutex> guard_l(m_created_media_sources_lock);
+		for (auto& globalsource : m_created_media_sources) {
+			for (auto localsource : m_sources) {
+				if (localsource.pMedia->GetID() == globalsource.pMedia->GetID() && localsource.pMedia->GetType() == globalsource.pMedia->GetType())
+					globalsource.m_source_ref_count--;
 			}
 		}
-		if (is_zero_ref_count_exist == false)
-			break;
+		bool is_zero_ref_count_exist;
+		while (true) {
+			is_zero_ref_count_exist = false;
+			for (int i = 0; i < (int)m_created_media_sources.size(); i++) {
+				if (m_created_media_sources[i].m_source_ref_count == 0) {
+					m_created_media_sources.erase(m_created_media_sources.begin() + i);
+					is_zero_ref_count_exist = true;
+					break;
+				}
+			}
+			if (is_zero_ref_count_exist == false)
+				break;
+		}
 	}
-	m_created_media_sources_lock.unlock();
-}
-
-void CFrameControl::SetLog(std::shared_ptr<CLogManager> log) {
-	m_pLog = log;
-}
-
-void CFrameControl::WriteLog(std::string data) {
-	
+	catch (...) {
+		//log
+	}
 }
 
 void CFrameControl::SetupMediaServer(int source_index, int& port, const char* server_type, double scale) {
@@ -967,13 +965,13 @@ void CFrameControl::SetupMediaServer(int source_index, int& port, const char* se
 	if (currently_live_streaming_index > -1)
 		m_sources[currently_live_streaming_index].isLiveStreaming = false;
 	m_sources[source_index].isLiveStreaming = true;
-	m_media_server_port.fetch_add(1);
+	m_media_server_port.fetch_add(1, std::memory_order_relaxed);
 	std::string server_t = server_type;
 	if(server_t == "MJPEG")		
-		m_pMediaServer = std::make_shared<CMJPEGMediaServer>(m_pLog, scale);
+		m_pMediaServer = std::make_shared<CMJPEGMediaServer>(scale);
 	else
-		m_pMediaServer = std::make_shared<CMJPEGMediaServer>(m_pLog, scale);
-	port = m_media_server_port.load();
+		m_pMediaServer = std::make_shared<CMJPEGMediaServer>(scale);
+	port = m_media_server_port.load(std::memory_order_relaxed);
 	m_pMediaServer->Init(port);
 	
 }
@@ -1008,13 +1006,13 @@ void CFrameControl::AddImageModification(const int stack_effect_index, const std
 	}
 
 	if (stack_effect_index == STACK_INDEX_DIM) {
-		m_effects.push_back(std::make_shared<CCrop>(document["width"].GetInt(), document["height"].GetInt(), m_pLog));
+		m_effects.push_back(std::make_shared<CCrop>(document["width"].GetInt(), document["height"].GetInt()));
 	}
 	else if (stack_effect_index == STACK_INDEX_FILTER) {
-		m_effects.push_back(std::make_shared<CFilter>(document["filter name"].GetString(), m_pLog));
+		m_effects.push_back(std::make_shared<CFilter>(document["filter name"].GetString()));
 	}
 	else if (stack_effect_index == STACK_INDEX_FRAME) {
-		m_effects.push_back(std::make_shared<COverlay>(document["frame name"].GetString(), m_pLog));
+		m_effects.push_back(std::make_shared<COverlay>(document["frame name"].GetString()));
 	}
 	else if (stack_effect_index == STACK_INDEX_BG_REMOVAL) {
 		bool is_using_gscreen = true;
@@ -1036,20 +1034,19 @@ void CFrameControl::AddImageModification(const int stack_effect_index, const std
 				if (document.HasMember("width") && document.HasMember("height")) {
 					int width = document["width"].GetInt();
 					int height = document["height"].GetInt();
-					m_effects.push_back(std::make_shared<CBackGorundRemoval>(document["name"].GetString(), m_pLog, r_l, g_l, b_l, r_h, g_h, b_h, is_static, width, height, document["repeat"].GetBool()));
+					m_effects.push_back(std::make_shared<CBackGorundRemoval>(document["name"].GetString(), r_l, g_l, b_l, r_h, g_h, b_h, is_static, width, height, document["repeat"].GetBool()));
 				}
 				else
-					m_effects.push_back(std::make_shared<CBackGorundRemoval>(document["name"].GetString(), m_pLog, r_l, g_l, b_l, r_h, g_h, b_h, is_static, document["repeat"].GetBool()));
+					m_effects.push_back(std::make_shared<CBackGorundRemoval>(document["name"].GetString(), r_l, g_l, b_l, r_h, g_h, b_h, is_static, document["repeat"].GetBool()));
 			}
 			else
-				m_effects.push_back(std::make_shared<CBackGorundRemoval>(document["name"].GetString(), m_pLog, r_l, g_l, b_l, r_h, g_h, b_h));
+				m_effects.push_back(std::make_shared<CBackGorundRemoval>(document["name"].GetString(), r_l, g_l, b_l, r_h, g_h, b_h));
 		}
 		else {
-			//CBackGorundRemoval(const char* name, std::shared_ptr<CLogManagerUnicode> log, bool is_static, bool is_greenscreen, int width, int height, bool repeat, cv::Mat& frame);
 			bool is_static = document["static"].GetBool();
 			int width = document["width"].GetInt();
 			int height = document["height"].GetInt();
-			m_effects.push_back(std::make_shared<CBackGorundRemoval>(document["name"].GetString(), m_pLog, is_static, is_using_gscreen, width, height, document["repeat"].GetBool(), m_bg_sub));
+			m_effects.push_back(std::make_shared<CBackGorundRemoval>(document["name"].GetString(), is_static, is_using_gscreen, width, height, document["repeat"].GetBool(), m_bg_sub));
 		}
 	}
 	else if (stack_effect_index == STACK_INDEX_DYN_FRAME) {
@@ -1058,9 +1055,9 @@ void CFrameControl::AddImageModification(const int stack_effect_index, const std
 		if(document.HasMember("repeat"))
 			is_repeat = document["repeat"].GetBool();
 		if(mode=="alpha")
-			m_effects.push_back(std::make_shared<CDynamicFrame>(document["file name"].GetString(), m_pLog, false, is_repeat));
+			m_effects.push_back(std::make_shared<CDynamicFrame>(document["file name"].GetString(), false, is_repeat));
 		else
-			m_effects.push_back(std::make_shared<CDynamicFrame>(document["file name"].GetString(), m_pLog, true, is_repeat));
+			m_effects.push_back(std::make_shared<CDynamicFrame>(document["file name"].GetString(), true, is_repeat));
 	}
 	while (true) {
 		bool isSwappped = false;
@@ -1093,18 +1090,18 @@ void CFrameControl::AddImageModificationWithCustomStackIndex(const int stack_eff
 	}
 
 	if (filter_type == STACK_INDEX_DIM) {
-		m_effects.push_back(std::make_shared<CCrop>(document["width"].GetInt(), document["height"].GetInt(), m_pLog));
+		m_effects.push_back(std::make_shared<CCrop>(document["width"].GetInt(), document["height"].GetInt()));
 	}
 	else if (filter_type == STACK_INDEX_FILTER) {
-		m_effects.push_back(std::make_shared<CFilter>(document["filter name"].GetString(), m_pLog));
+		m_effects.push_back(std::make_shared<CFilter>(document["filter name"].GetString()));
 	}
 	else if (filter_type == STACK_INDEX_FRAME) {
-		m_effects.push_back(std::make_shared<COverlay>(document["frame name"].GetString(), m_pLog, stack_effect_index));
+		m_effects.push_back(std::make_shared<COverlay>(document["frame name"].GetString(), stack_effect_index));
 	}
 	else if (filter_type == STACK_INDEX_ACC) {
 		double thres = document["confidence"].GetDouble();
 		int size_ = document["size"].GetInt();
-		m_effects.push_back(std::make_shared<CClassicFaceDetect>(document["id"].GetString(), m_pLog, thres, size_, stack_effect_index));
+		m_effects.push_back(std::make_shared<CClassicFaceDetect>(document["id"].GetString(), thres, size_, stack_effect_index));
 	}
 	else if (filter_type == STACK_INDEX_DYN_FRAME) {
 		std::string mode = document["mode"].GetString();
@@ -1115,10 +1112,10 @@ void CFrameControl::AddImageModificationWithCustomStackIndex(const int stack_eff
 			if (document.HasMember("width") && document.HasMember("height")) {
 				int width = document["width"].GetInt();
 				int height = document["height"].GetInt();
-				m_effects.push_back(std::make_shared<CDynamicFrame>(document["file name"].GetString(), m_pLog, false, stack_effect_index, width, height, repeat));
+				m_effects.push_back(std::make_shared<CDynamicFrame>(document["file name"].GetString(), false, stack_effect_index, width, height, repeat));
 			}
 			else
-				m_effects.push_back(std::make_shared<CDynamicFrame>(document["file name"].GetString(), m_pLog, false, stack_effect_index, repeat));
+				m_effects.push_back(std::make_shared<CDynamicFrame>(document["file name"].GetString(), false, stack_effect_index, repeat));
 		}
 		else {
 			int r_l = document["RL"].GetInt();
@@ -1130,7 +1127,8 @@ void CFrameControl::AddImageModificationWithCustomStackIndex(const int stack_eff
 			int b_h = document["BH"].GetInt();
 			int width = document["width"].GetInt();
 			int height = document["height"].GetInt();			
-			m_effects.push_back(std::make_shared<CDynamicFrame>(document["file name"].GetString(), m_pLog, true, stack_effect_index, width, height, r_l, g_l, b_l, r_h, g_h, b_h, repeat));
+			
+			m_effects.push_back(std::make_shared<CDynamicFrame>(document["file name"].GetString(), true, stack_effect_index, width, height, r_l, g_l, b_l, r_h, g_h, b_h, repeat));
 		}
 	}
 	while (true) {

@@ -31,23 +31,23 @@ class CBaseEffect{
 protected:
 	int m_stack_effect_index = 0;
 	std::string m_name = "DUMMY";	
-	std::shared_ptr<CLogManager> m_pLog = nullptr;
 	
+	CLogManager* m_pLog = nullptr;
 	std::atomic<int> m_error_code;
 
 	cv::Mat frame_overlay;
 
 public:	
-	CBaseEffect(const std::string& name, std::shared_ptr<CLogManager> log) {
+	CBaseEffect(const std::string& name) {
 		m_name = name; 
-		m_pLog = log;
+		m_pLog = CLogManager::getInstance();
 		m_error_code.store(EFFECT_ERR_NONE);		
 		m_pLog->AsyncWrite(m_pLog->string_format("Effect [%s] created", m_name.c_str()).c_str(), true, true);
 	};
 
-	CBaseEffect(const std::string& name, std::shared_ptr<CLogManager> log, int stack_index) {
+	CBaseEffect(const std::string& name, int stack_index) {
 		m_name = name;
-		m_pLog = log;
+		m_pLog = CLogManager::getInstance();
 		m_stack_effect_index = stack_index;
 		m_error_code.store(EFFECT_ERR_NONE);
 		m_pLog->AsyncWrite(m_pLog->string_format("Effect [%s] created", m_name.c_str()).c_str(), true, true);
@@ -76,13 +76,13 @@ private:
 	int m_width = 0;
 	int m_height = 0;
 public:	
-	CCrop(int x, int y, std::shared_ptr<CLogManager> log);
+	CCrop(int x, int y);
 	int filter(cv::Mat& frame);
 };
 
 class CFilter : public CBaseEffect {
 public:
-	CFilter(const std::string& name, std::shared_ptr<CLogManager> log);
+	CFilter(const std::string& name);
 	int filter(cv::Mat& frame);
 };
 
@@ -91,8 +91,9 @@ class COverlay : public CBaseEffect {
 protected:
 	int overlay_index = 0;
 public:	
-	COverlay(const std::string& name, std::shared_ptr<CLogManager> log);
-	COverlay(const std::string& name, std::shared_ptr<CLogManager> log, int stack_index);
+	COverlay(const std::string& name);
+	COverlay(const std::string& name, int stack_index);
+
 	int filter(cv::Mat& frame);
 	void overlayImage(const cv::Mat &background, const cv::Mat &foreground, cv::Mat &output, cv::Point2i location);
 };
@@ -125,10 +126,12 @@ private:
 	cv::Ptr<cv::BackgroundSubtractor> m_pBackSub;
 
 public:		
-	CBackGorundRemoval(const char* name, std::shared_ptr<CLogManager> log, int rl, int gl, int bl, int rh, int gh, int bh);
-	CBackGorundRemoval(const char* name, std::shared_ptr<CLogManager> log, int rl, int gl, int bl, int rh, int gh, int bh, bool is_static, bool repeat);
-	CBackGorundRemoval(const char* name, std::shared_ptr<CLogManager> log, int rl, int gl, int bl, int rh, int gh, int bh, bool is_static, int width, int height, bool repeat);
-	CBackGorundRemoval(const char* name, std::shared_ptr<CLogManager> log, bool is_static, bool is_greenscreen, int width, int height, bool repeat, cv::Mat& frame);
+
+	CBackGorundRemoval(const char* name, int rl, int gl, int bl, int rh, int gh, int bh);
+	CBackGorundRemoval(const char* name, int rl, int gl, int bl, int rh, int gh, int bh, bool is_static, bool repeat);
+	CBackGorundRemoval(const char* name, int rl, int gl, int bl, int rh, int gh, int bh, bool is_static, int width, int height, bool repeat);
+	CBackGorundRemoval(const char* name, bool is_static, bool is_greenscreen, int width, int height, bool repeat, cv::Mat& frame);
+
 	~CBackGorundRemoval() {
 		m_isrunning.store(false);
 		if (m_liveview_thread.joinable()) {
@@ -179,11 +182,12 @@ private:
 	int m_height = -1;
 
 public:
-	CDynamicFrame(const char* name, std::shared_ptr<CLogManager> log, bool greenscreen, bool repeat);
-	CDynamicFrame(const char* name, std::shared_ptr<CLogManager> log, bool greenscreen, int stackindex, bool repeat);
-	CDynamicFrame(const char* name, std::shared_ptr<CLogManager> log, bool greenscreen, int stackindex, int width, int height, bool repeat);
-	CDynamicFrame(const char* name, std::shared_ptr<CLogManager> log, bool greenscreen, int stackindex, int rl, int gl, int bl, int rh, int gh, int bh, bool repeat);
-	CDynamicFrame(const char* name, std::shared_ptr<CLogManager> log, bool greenscreen, int stackindex, int width, int height, int rl, int gl, int bl, int rh, int gh, int bh, bool repeat);
+	
+	CDynamicFrame(const char* name, bool greenscreen, bool repeat);
+	CDynamicFrame(const char* name, bool greenscreen, int stackindex, bool repeat);
+	CDynamicFrame(const char* name, bool greenscreen, int stackindex, int width, int height, bool repeat);
+	CDynamicFrame(const char* name, bool greenscreen, int stackindex, int rl, int gl, int bl, int rh, int gh, int bh, bool repeat);
+	CDynamicFrame(const char* name, bool greenscreen, int stackindex, int width, int height, int rl, int gl, int bl, int rh, int gh, int bh, bool repeat);
 
 	~CDynamicFrame() {		
 		m_isrunning.store(false);
@@ -237,8 +241,9 @@ private:
 	cv::Mat m_last_frame;
 
 public:
-	CClassicFaceDetect(const char* name, std::shared_ptr<CLogManager> log, double confidence, int minimum_size);
-	CClassicFaceDetect(const char* name, std::shared_ptr<CLogManager> log, double confidence, int minimum_size, int stack_index);
+	CClassicFaceDetect(const char* name, double confidence, int minimum_size);
+	CClassicFaceDetect(const char* name, double confidence, int minimum_size, int stack_index);
+
 	~CClassicFaceDetect() {
 		int state = m_state.load();
 		if (state != EFFECT_THREAD_STATE_IDLE)

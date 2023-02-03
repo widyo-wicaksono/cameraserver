@@ -6,16 +6,16 @@
 //#include  "CanonCamUtil.h"
 #endif
 
-CBaseMediaSource::CBaseMediaSource(std::shared_ptr<CLogManager> log) {
-	m_pLog = log;	
-	m_error_code.store(ERR_NONE);
-	m_error_count.store(0);
+CBaseMediaSource::CBaseMediaSource() {
+	m_pLog = CLogManager::getInstance();	
+	m_error_code.store(ERR_NONE, std::memory_order_relaxed);
+	m_error_count.store(0, std::memory_order_relaxed);
 }
 
-CBaseMediaSource::CBaseMediaSource(std::shared_ptr<CLogManager> log, int width, int height, bool is_landscape) :m_lv_width(width), m_lv_height(height), m_is_lv_landscape(is_landscape) {
-	m_pLog = log;	
-	m_error_code.store(ERR_NONE);
-	m_error_count.store(0);
+CBaseMediaSource::CBaseMediaSource(int width, int height, bool is_landscape) :m_lv_width(width), m_lv_height(height), m_is_lv_landscape(is_landscape) {
+	m_pLog = CLogManager::getInstance();
+	m_error_code.store(ERR_NONE, std::memory_order_relaxed);
+	m_error_count.store(0, std::memory_order_relaxed);
 }
 
 
@@ -28,7 +28,7 @@ CBaseMediaSource::SourceType CBaseMediaSource::GetType() {
 }
 
 int CBaseMediaSource::GetState() {	
-	return m_state.load();
+	return m_state.load(std::memory_order_relaxed);
 }
 
 /*
@@ -39,41 +39,47 @@ int CBaseMediaSource::GetError() {
 
 
 void CBaseMediaSource::GetError(int& error_code, int& error_count) {
-	error_code = m_error_code.load();
-	error_count = m_error_count.load();
+	error_code = m_error_code.load(std::memory_order_relaxed);
+	error_count = m_error_count.load(std::memory_order_relaxed);
 }
 
 void CBaseMediaSource::StopLiveView() {
-	m_isrunning.store(false);
+	m_isrunning.store(false, std::memory_order_relaxed);
 	if (m_liveview_thread.joinable())
 		m_liveview_thread.join();
 }
 
 int CBaseMediaSource::GrabMostRecentFrame(cv::Mat& frame) {
 	int ret = -1;
-	m_framelock.lock();
-	if (m_frame_buffer.size() > 0) {
-		frame = m_frame_buffer[m_frame_buffer.size() - 1].clone();
-		ret = 0;
+
+	try{
+		std::lock_guard<std::mutex> guard_l(m_framelock);
+		if (m_frame_buffer.size() > 0) {
+			frame = m_frame_buffer.back().clone();
+			ret = 0;
+		}
 	}
-	m_framelock.unlock();
+	catch (...) {
+		//log
+	}
+	
 	return ret;
 }
 
 void CBaseMediaSource::SetError(int error_) {
-	if (m_error_code.load() == ERR_NONE) {
-		m_error_code.store(error_);
-		m_error_count.fetch_add(1);
+	if (m_error_code.load(std::memory_order_relaxed) == ERR_NONE) {
+		m_error_code.store(error_, std::memory_order_relaxed);
+		m_error_count.fetch_add(1, std::memory_order_relaxed);
 	}
 }
 
-CWebcamSource::CWebcamSource(std::string& index, std::shared_ptr<CLogManager> log) :CBaseMediaSource(log) {
+CWebcamSource::CWebcamSource(std::string& index) :CBaseMediaSource() {
 	m_id = index;
 	m_type = CBaseMediaSource::SourceType::webcam;		
 	m_pLog->AsyncWrite(m_pLog->string_format("Media Source Webcam[%s] created", m_id.c_str()).c_str(), true, true);
 }
 
-CWebcamSource::CWebcamSource(std::string& index, std::shared_ptr<CLogManager> log, int width, int height, bool is_landscape) :CBaseMediaSource(log, width, height, is_landscape) {
+CWebcamSource::CWebcamSource(std::string & index, int width, int height, bool is_landscape) :CBaseMediaSource(width, height, is_landscape) {
 	m_id = index;
 	m_type = CBaseMediaSource::SourceType::webcam;	
 	m_pLog->AsyncWrite(m_pLog->string_format("Media Source Webcam[%s] created", m_id.c_str()).c_str(), true, true);
@@ -85,11 +91,6 @@ CWebcamSource::~CWebcamSource() {
 }
 
 int CWebcamSource::StartLiveView() {
-	/*
-	m_isrunning.store(true);
-	if (m_liveview_thread.joinable())
-		m_liveview_thread.join();
-		*/
 	StopLiveView();	
 	try {
 		m_liveview_thread = std::thread(&CWebcamSource::FnLiveViewThread, this);
@@ -103,10 +104,9 @@ int CWebcamSource::StartLiveView() {
 void CWebcamSource::FnLiveViewThread() {
 	
 	std::unique_ptr<CFPSCounter> pfps = std::make_unique<CFPSCounter>();
-	m_isrunning.store(true);
+	m_isrunning.store(true, std::memory_order_relaxed);
 	
-	m_state.store(MEDIA_THREAD_STATE_STARTING);
-	bool bIsRunning= m_isrunning.load();
+	m_state.store(MEDIA_THREAD_STATE_STARTING, std::memory_order_relaxed);
 
 	cv::VideoCapture cap;
 
@@ -114,6 +114,7 @@ void CWebcamSource::FnLiveViewThread() {
 	//if (cap.open(std::stoi(m_id), cv::CAP_MSMF)) {
 #ifdef _WIN32
 	if (cap.open(std::stoi(m_id), cv::CAP_DSHOW)) {
+	//if (cap.open(std::stoi(m_id))) {
 #else
 	if (cap.open(std::stoi(m_id))) {
 #endif
@@ -132,10 +133,12 @@ void CWebcamSource::FnLiveViewThread() {
 			}
 		}
 		
-		m_state.store(MEDIA_THREAD_STATE_RUNNING);
-		while (bIsRunning) {
+		m_state.store(MEDIA_THREAD_STATE_RUNNING, std::memory_order_relaxed);
+		while (m_isrunning.load(std::memory_order_relaxed)) {
 			cv::Mat frame;			
-			cap >> frame;
+			//cap >> frame;
+			cap.read(frame);
+			
 			if (!frame.empty()) {			
 				cv::flip(frame, frame, 1);
 				if (!m_is_lv_landscape)
@@ -144,12 +147,16 @@ void CWebcamSource::FnLiveViewThread() {
 				std::string fps = pfps->GetFPSinString();					
 				m_pLog->WriteToOCVScreen(fps.c_str(), 50, 50, 0, 0, 255, frame);
 
-				m_framelock.lock();
-				if (m_frame_buffer.size() > 50) {
-					m_frame_buffer.erase(m_frame_buffer.begin());
+				try {
+					std::lock_guard<std::mutex> guard_l(m_framelock);
+					if (m_frame_buffer.size() > 50) {
+						m_frame_buffer.erase(m_frame_buffer.begin());
+					}
+					m_frame_buffer.push_back(frame);
 				}
-				m_frame_buffer.push_back(frame);				
-				m_framelock.unlock();			
+				catch (...) {
+					//log
+				}	
 
 				std::this_thread::sleep_for(std::chrono::milliseconds(5));
 			}
@@ -157,7 +164,6 @@ void CWebcamSource::FnLiveViewThread() {
 				SetError(ERR_WEBCAM_EMPTY_FRAME);
 				std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 			}
-			bIsRunning = m_isrunning.load();
 		}
 		
 		cap.release();
@@ -168,7 +174,7 @@ void CWebcamSource::FnLiveViewThread() {
 		SetError(ERR_WEBCAM_FAIL_TO_OPEN);
 	}
 	m_pLog->AsyncWrite(m_pLog->string_format("Stream Thread [%s] exiting ...", m_id.c_str()).c_str(), true, true);
-	m_state.store(MEDIA_THREAD_STATE_EXITING);
+	m_state.store(MEDIA_THREAD_STATE_EXITING, std::memory_order_relaxed);
 }
 /*
 int CWebcamSource::GrabMostRecentFrame(cv::Mat& frame) {
@@ -189,13 +195,13 @@ int CWebcamSource::CapturePhoto(cv::Mat& frame) {
 	return ret;
 }
 
-CIPCam::CIPCam(std::string& address, std::shared_ptr<CLogManager> log) :CBaseMediaSource(log) {
+CIPCam::CIPCam(std::string& address) :CBaseMediaSource() {
 	m_id = address;
 	m_type = CBaseMediaSource::SourceType::ipcam;
 	m_pLog->AsyncWrite(m_pLog->string_format("Media Source IPCam[%s] created", m_id.c_str()).c_str(), true, true);
 }
 
-CIPCam::CIPCam(std::string& address, std::shared_ptr<CLogManager> log, int width, int height, bool is_landscape) :CBaseMediaSource(log, width, height, is_landscape) {
+CIPCam::CIPCam(std::string& address, int width, int height, bool is_landscape) :CBaseMediaSource(width, height, is_landscape) {
 	m_id = address;
 	m_type = CBaseMediaSource::SourceType::ipcam;	
 	m_pLog->AsyncWrite(m_pLog->string_format("Media Source IPCam[%s] created", m_id.c_str()).c_str(), true, true);
@@ -210,17 +216,15 @@ CIPCam::~CIPCam() {
 void CIPCam::FnLiveViewThread() {
 	
 	std::unique_ptr<CFPSCounter> pfps = std::make_unique<CFPSCounter>();
-	m_isrunning.store(true);
-	//m_error_code.store(ERR_NONE);
-	m_state.store(MEDIA_THREAD_STATE_STARTING);
-	bool bIsRunning = m_isrunning.load();
+	m_isrunning.store(std::memory_order_relaxed);
+	m_state.store(MEDIA_THREAD_STATE_STARTING, std::memory_order_relaxed);
 
 	CBasicFFMPEGWrap ffmpeg;
 	std::string error_string;
 
 	if (ffmpeg.openStream(m_id, error_string) == 0) {
-		m_state.store(MEDIA_THREAD_STATE_RUNNING);
-		while (bIsRunning) {
+		m_state.store(MEDIA_THREAD_STATE_RUNNING, std::memory_order_relaxed);
+		while (m_isrunning.load(std::memory_order_relaxed)) {
 			cv::Mat frame;
 
 			unsigned char* buff = nullptr;
@@ -247,33 +251,33 @@ void CIPCam::FnLiveViewThread() {
 				std::string fps = pfps->GetFPSinString();								
 				m_pLog->WriteToOCVScreen(fps.c_str(), 50, 50, 0, 0, 255, frame);
 
-				m_framelock.lock();
-				if (m_frame_buffer.size() > 50) {
-					m_frame_buffer.erase(m_frame_buffer.begin());
+				try {
+					std::lock_guard<std::mutex> guard_l(m_framelock);
+					if (m_frame_buffer.size() > 50) {
+						m_frame_buffer.erase(m_frame_buffer.begin());
+					}
+
+					m_frame_buffer.push_back(frame);
+				}
+				catch (...) {
+					//log
 				}
 
-				m_frame_buffer.push_back(frame);
-				m_framelock.unlock();				
-				//cv::imshow("IPCAM", frame);
-				//cv::waitKey(5);
 				std::this_thread::sleep_for(std::chrono::milliseconds(1));
 			}
 			else {
-				//m_error_code.store(ERR_WEBCAM_EMPTY_FRAME);
 				SetError(ERR_WEBCAM_EMPTY_FRAME);
 				std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 			}
-			bIsRunning = m_isrunning.load();
 		}				
 		ffmpeg.closeStream();
 	}
 	else {		
 		m_pLog->AsyncWrite(m_pLog->string_format("Failed to open network stream : %s[%s]", error_string.c_str(), m_id.c_str()).c_str(), true, true);
-		//m_error_code.store(ERR_IPCAM_FAIL_TO_OPEN);
 		SetError(ERR_WEBCAM_EMPTY_FRAME);
 	}	
 	m_pLog->AsyncWrite(m_pLog->string_format("Stream Thread [%s] exiting ...", m_id.c_str()).c_str(), true, true);
-	m_state.store(MEDIA_THREAD_STATE_EXITING);
+	m_state.store(MEDIA_THREAD_STATE_EXITING, std::memory_order_relaxed);
 }
 /*
 int CIPCam::GrabMostRecentFrame(cv::Mat& frame) {
@@ -296,8 +300,6 @@ int CIPCam::CapturePhoto(cv::Mat& frame) {
 
 int CIPCam::StartLiveView() {
 	StopLiveView();
-	//m_liveview_thread = std::thread(&CIPCam::FnLiveViewThread, this);
-
 	try {
 		m_liveview_thread = std::thread(&CIPCam::FnLiveViewThread, this);
 	}

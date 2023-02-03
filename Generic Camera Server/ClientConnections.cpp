@@ -30,50 +30,76 @@ int CBaseServer::AsyncGetMessage(_ConnectionMessage& message) {
 	return ret;
 }
 
-int CBaseServer::AsyncPutMessage(_ConnectionMessage& message) {
+int CBaseServer::AsyncPutMessage(const _ConnectionMessage& message) {
 	int ret = 0;
-	m_outbound_lock.lock();	
-	m_outbound.emplace_back(message);
-	m_outbound_lock.unlock();
+	
+	try {
+		std::lock_guard<std::mutex> guard_l(m_outbound_lock);
+		m_outbound.emplace_back(message);
+	}
+	catch (...) {
+		//log something
+	}
 	return ret;
 }
 
 bool CBaseServer::AsyncGetNewConnection(void** lp_connection) {
 	bool ret = false;
-	m_connection_lock.lock();
-	if (m_new_connections.size() > 0) {
-		*lp_connection = m_new_connections[0];
-		m_new_connections.erase(m_new_connections.begin());
-		ret = true;
+	
+	try {
+		std::lock_guard<std::mutex> guard_l(m_connection_lock);
+		if (m_new_connections.size() > 0) {
+			*lp_connection = m_new_connections[0];
+			m_new_connections.erase(m_new_connections.begin());
+			ret = true;
+		}
+
 	}
-	m_connection_lock.unlock();
+	catch (...) {
+		//log something
+	}
 	return ret;
 }
 
 bool CBaseServer::AsyncGetDisconnectedConnection(void** lp_connection) {
 	bool ret = false;
-	m_connection_lock.lock();
-	if (m_disconnected_connections.size() > 0) {
-		*lp_connection = m_disconnected_connections[0];
-		m_disconnected_connections.erase(m_disconnected_connections.begin());
-		ret = true;
+	
+	try {
+		std::lock_guard<std::mutex> guard_l(m_connection_lock);
+		if (m_disconnected_connections.size() > 0) {
+			*lp_connection = m_disconnected_connections[0];
+			m_disconnected_connections.erase(m_disconnected_connections.begin());
+			ret = true;
+		}
+
 	}
-	m_connection_lock.unlock();
+	catch (...) {
+		//log something
+	}
 	return ret;
 }
 
-void CBaseServer::AsyncAddNewConnection(void* p) {
-	m_connection_lock.lock();
-	m_new_connections.push_back(p);
-	m_connection_lock.unlock();
-
+void CBaseServer::AsyncAddNewConnection(void* p) {	
+	
+	try {
+		std::lock_guard<std::mutex> guard_l(m_connection_lock);
+		m_new_connections.push_back(p);
+	}
+	catch (...) {
+		//log something
+	}
 	m_internal_connection_list.emplace_back(_ConnectionMessage::DataDirection::none, p, "");
 }
 
 void CBaseServer::AsyncAddDisconnectedConnection(void* p) {
-	m_connection_lock.lock();
-	m_disconnected_connections.push_back(p);
-	m_connection_lock.unlock();
+	
+	try {
+		std::lock_guard<std::mutex> guard_l(m_connection_lock);
+		m_disconnected_connections.push_back(p);
+	}
+	catch (...) {
+		//log something
+	}
 
 	for (int i = 0; i < (int)m_internal_connection_list.size(); i++) {
 		if(m_internal_connection_list[i].lp_connection==p){
@@ -123,12 +149,6 @@ static const struct lws_http_mount mount = {
 	/* .basic_auth_login_file */	NULL,
 };
 
-//CWSServer::CWSServer(std::shared_ptr<CLogManagerUnicode> log)
-CWSServer::CWSServer(std::shared_ptr<CLogManager> log)
-{
-	m_pLog = log;
-}
-
 CWSServer::~CWSServer() {
 	SignalStop(false);
 	if (m_thread.joinable())
@@ -170,15 +190,14 @@ int CWSServer::callback_client(struct lws *wsi, enum lws_callback_reasons reason
 }
 
 int CWSServer::Init() {
-	//const char *iface = NULL;
-	m_is_running.store(true);
+	
+	m_is_running.store(true, std::memory_order_relaxed);
 
 	memset(&m_info, 0, sizeof(m_info));
 	m_info.port = WS_PORT;
 	m_info.mounts = &mount;	
 	m_info.protocols = m_protocols;
 
-	//m_info.vhost_name = "192.168.100.2";
 	m_info.vhost_name = "localhost";
 	m_info.ws_ping_pong_interval = 5;	
 	g_pWSServer = this;
@@ -209,13 +228,12 @@ int CWSServer::Run() {
 void CWSServer::FnConnectionThread() {
 	
 	if (Init() == 0) {
-		bool bIsRunning = m_is_running.load();		
 		m_pLog->AsyncWrite("Websocket Server is running", true, true);
-		while (bIsRunning) {
+		
+		while(m_is_running.load(std::memory_order_relaxed)){
 			if (lws_service(m_pcontext, 5) >= 0) {
 				_ConnectionMessage message;
 				if (AsyncGetMessageFromQueue(message)) {
-					//m_outbound_data_buffer.push_back(message);
 					m_outbound_data_buffer.emplace_back(message);
 					lws_callback_on_writable((struct lws*)message.lp_connection);
 				}
@@ -223,15 +241,15 @@ void CWSServer::FnConnectionThread() {
 			else {
 				break;
 			}
-			bIsRunning = m_is_running.load();
 		}
 		Uninit();				
 		m_pLog->AsyncWrite("Websocket Server is exiting ...", true, true);
+		
 	}	
 }
 
 void CWSServer::SignalStop(bool signal) {
-	m_is_running.store(signal);
+	m_is_running.store(signal, std::memory_order_relaxed);
 }
 
 int CWSServer::Uninit() {
@@ -239,7 +257,7 @@ int CWSServer::Uninit() {
 	return 0;
 }
 
-int CWSServer::SendWSData(std::string& datatosend, struct lws * wsi)
+int CWSServer::SendWSData(const std::string& datatosend, struct lws * wsi)
 {
 	int chunk_size = (int)datatosend.size();
 
@@ -256,22 +274,26 @@ int CWSServer::SendWSData(std::string& datatosend, struct lws * wsi)
 
 void CWSServer::AsyncAddMessageToQueue(const _ConnectionMessage& message) {
 	m_inbound_lock.lock();
-	//m_inbound.push_back(message);
 	m_inbound.emplace_back(message);
 	m_inbound_lock.unlock();
 }
 
 bool CWSServer::AsyncGetMessageFromQueue(_ConnectionMessage& message) {
 	bool ret = false;	
-	m_outbound_lock.lock();
-	if (m_outbound.size() > 0) {		
-		message.lp_connection = m_outbound[0].lp_connection;
-		message.data = m_outbound[0].data;
-		message.flow = m_outbound[0].flow;
-		m_outbound.erase(m_outbound.begin());
-		ret = true;
+	
+	try {
+		std::lock_guard<std::mutex> guard_l(m_outbound_lock);
+		if (m_outbound.size() > 0) {
+			message.lp_connection = m_outbound[0].lp_connection;
+			message.data = m_outbound[0].data;
+			message.flow = m_outbound[0].flow;
+			m_outbound.erase(m_outbound.begin());
+			ret = true;
+		}
 	}
-	m_outbound_lock.unlock();
+	catch (...) {
+		//log something ...
+	}
 	return ret;
 }
 
@@ -289,7 +311,6 @@ int CWSServer::SendDataToClientIfAvalable(struct lws * wsi) {
 			index++;
 		}
 		if (bIsFound) {
-			//SendWSData(m_outbound_data_buffer[index].data, (struct lws*)m_outbound_data_buffer[index].lp_connection);
 			buffer_to_send = m_outbound_data_buffer[index].data;
 			m_outbound_data_buffer.erase(m_outbound_data_buffer.begin() + index);			
 		}
@@ -313,7 +334,6 @@ int CWSServer::UploadDataToControlIfAvalable(struct lws * wsi, std::string& data
 	int index = 0;
 	
 	m_pLog->AsyncWrite(data.c_str(), true, false);
-
 	if (m_inbound_data_buffer.size() > 0) {
 		while (index < (int)m_inbound_data_buffer.size()) {
 			if (wsi == (struct lws*)m_inbound_data_buffer[index].lp_connection) {
@@ -335,7 +355,7 @@ int CWSServer::UploadDataToControlIfAvalable(struct lws * wsi, std::string& data
 		document.Parse(data.c_str());
 		std::string command = document["command"].GetString();
 		if (command == "broadcast") {
-			std::string tmp = "Broadcasting :" + data;			
+			std::string tmp = "Broadcasting :" + data;
 			m_pLog->AsyncWrite(tmp.c_str(), true, true);
 			m_inbound_data_buffer.erase(m_inbound_data_buffer.begin() + index);
 
@@ -347,12 +367,12 @@ int CWSServer::UploadDataToControlIfAvalable(struct lws * wsi, std::string& data
 			}
 			return 0;
 		}
-		
+
 		_ConnectionMessage message(_ConnectionMessage::DataDirection::inbound, (void*)wsi, m_inbound_data_buffer[index].data);
-		AsyncAddMessageToQueue(message);		
+		AsyncAddMessageToQueue(message);
 		m_inbound_data_buffer.erase(m_inbound_data_buffer.begin() + index);
 	}
-	else		
+	else
 		m_pLog->AsyncWrite("Websocket Server is choked ...", true, true);
 	
 	return 0;

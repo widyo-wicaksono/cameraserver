@@ -31,10 +31,12 @@ class CBaseMediaServer {
 protected:
 	int m_port= 7778;
 	double m_scale = 1.0;	
-	std::shared_ptr<CLogManager> m_pLog = nullptr;
+	
+	CLogManager* m_pLog = nullptr;
 public:		
-	CBaseMediaServer(std::shared_ptr<CLogManager> log, double scale) {
-		m_pLog = log;
+	
+	CBaseMediaServer(double scale) {
+		m_pLog = CLogManager::getInstance();
 		m_scale = scale;
 		
 		m_pLog->AsyncWrite("Media Server created", true, true);
@@ -70,7 +72,8 @@ private:
 	void WriteToClientEx();
 	int _write(int sock, const char *s, int len);
 public:	
-	CMJPEGMediaServer(std::shared_ptr<CLogManager> log, double scale);
+	
+	CMJPEGMediaServer(double scale);
 	~CMJPEGMediaServer() {		
 		m_IsRunning.store(false);
 		m_cv.notify_one();
@@ -81,6 +84,5 @@ public:
 
 	int putFrame(const cv::Mat frame);
 	int Write(const cv::Mat& frame);
-	//int WriteEx(const cv::Mat & frame);
-	
+
 };

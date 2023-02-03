@@ -33,7 +33,7 @@ public:
 	CBasicFFMPEGWrap();
 	~CBasicFFMPEGWrap();
 
-	int openStream(std::string& media_path, std::string& error_string);
+	int openStream(const std::string& media_path, std::string& error_string);
 	int getVideoFrame(unsigned char **buf, unsigned int& xsize, unsigned int& ysize);
 
 	int getVideoFrameAlpha(unsigned char **buf, unsigned int& xsize, unsigned int& ysize);
