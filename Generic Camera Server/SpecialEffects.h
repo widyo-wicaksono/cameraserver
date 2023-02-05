@@ -28,20 +28,18 @@
 #define EFFECT_ENDED 103
 
 class CBaseEffect{
+
 protected:
 	int m_stack_effect_index = 0;
 	std::string m_name = "DUMMY";	
-	
 	CLogManager* m_pLog = nullptr;
 	std::atomic<int> m_error_code;
-
 	cv::Mat frame_overlay;
 
-public:	
-	CBaseEffect(const std::string& name) {
+	explicit CBaseEffect(const std::string& name) {
 		m_name = name; 
 		m_pLog = CLogManager::getInstance();
-		m_error_code.store(EFFECT_ERR_NONE);		
+		m_error_code.store(EFFECT_ERR_NONE, std::memory_order_relaxed);		
 		m_pLog->AsyncWrite(m_pLog->string_format("Effect [%s] created", m_name.c_str()).c_str(), true, true);
 	};
 
@@ -49,25 +47,34 @@ public:
 		m_name = name;
 		m_pLog = CLogManager::getInstance();
 		m_stack_effect_index = stack_index;
-		m_error_code.store(EFFECT_ERR_NONE);
+		m_error_code.store(EFFECT_ERR_NONE, std::memory_order_relaxed);
 		m_pLog->AsyncWrite(m_pLog->string_format("Effect [%s] created", m_name.c_str()).c_str(), true, true);
 	};
-	
+
+	CBaseEffect(const CBaseEffect&) = delete;
+	CBaseEffect(CBaseEffect&&) = delete;
+	CBaseEffect& operator=(const CBaseEffect&) = delete;
+	CBaseEffect& operator=(CBaseEffect&&) = delete;
+
+public:	
 	virtual ~CBaseEffect() {		
 		m_pLog->AsyncWrite(m_pLog->string_format("Effect [%s] destroyed", m_name.c_str()).c_str(), true, true);
 	};
-	virtual int filter(cv::Mat& frame) { return 0; };	
+	
+	virtual int filter(cv::Mat& frame) = 0;
+
 	std::string GetName() { return m_name; };
 	void SetName(const std::string& name) { m_name = name; };
-	int GetStackIndex() {
+
+	inline int GetStackIndex() {
 		return m_stack_effect_index;
 	};
 
-	int GetError() {
-		return m_error_code.load();
+	inline int GetError() {
+		return m_error_code.load(std::memory_order_relaxed);
 	};
-	void ResetError() {
-		m_error_code.store(EFFECT_ERR_NONE);
+	inline void ResetError() {
+		m_error_code.store(EFFECT_ERR_NONE, std::memory_order_relaxed);
 	};
 };
 
@@ -117,8 +124,7 @@ private:
 	bool m_is_static = true;
 	bool m_is_repeat = false;
 	bool m_is_greenscreen = true;
-	//bool m_is_greenscreen = false;
-
+	
 	int m_width = -1;
 	int m_height = -1;
 
@@ -138,6 +144,12 @@ public:
 			m_liveview_thread.join();
 		}
 	}
+
+	CBackGorundRemoval(const CBackGorundRemoval&) = delete;
+	CBackGorundRemoval(CBackGorundRemoval&&) = delete;
+	CBackGorundRemoval& operator=(const CBackGorundRemoval&) = delete;
+	CBackGorundRemoval& operator=(CBackGorundRemoval&&) = delete;
+
 	int filter(cv::Mat& frame);
 	int GrabMostRecentFrame(cv::Mat& frame);
 	int GetLoopState() {
@@ -204,6 +216,12 @@ public:
 			}			
 		}
 	}
+
+	CDynamicFrame(const CDynamicFrame&) = delete;
+	CDynamicFrame(CDynamicFrame&&) = delete;
+	CDynamicFrame& operator=(const CDynamicFrame&) = delete;
+	CDynamicFrame& operator=(CDynamicFrame&&) = delete;
+
 	int filter(cv::Mat& frame);
 	int hwAcceleratedFilter(cv::Mat& frame);
 	int GrabMostRecentFrame(cv::Mat& frame);
@@ -249,6 +267,11 @@ public:
 		if (state != EFFECT_THREAD_STATE_IDLE)
 			m_detection_future.get();
 	};
+
+	CClassicFaceDetect(const CClassicFaceDetect&) = delete;
+	CClassicFaceDetect(CClassicFaceDetect&&) = delete;
+	CClassicFaceDetect& operator=(const CClassicFaceDetect&) = delete;
+	CClassicFaceDetect& operator=(CClassicFaceDetect&&) = delete;
 
 	int FnDetectionThread(cv::Mat frame);
 	int DetectFaceNonThreaded(cv::Mat& frame, std::vector<LANDMARK>& outputs);

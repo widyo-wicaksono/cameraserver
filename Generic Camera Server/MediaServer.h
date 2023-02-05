@@ -33,14 +33,21 @@ protected:
 	double m_scale = 1.0;	
 	
 	CLogManager* m_pLog = nullptr;
+
+	CBaseMediaServer(double scale);
+	CBaseMediaServer(const CBaseMediaServer&) = delete;
+	CBaseMediaServer(CBaseMediaServer&&) = delete;
+	CBaseMediaServer& operator=(const CBaseMediaServer&) = delete;
+	CBaseMediaServer& operator=(CBaseMediaServer&&) = delete;
+
 public:		
-	
+	/*
 	CBaseMediaServer(double scale) {
 		m_pLog = CLogManager::getInstance();
 		m_scale = scale;
-		
 		m_pLog->AsyncWrite("Media Server created", true, true);
 	}
+	*/
 	virtual ~CBaseMediaServer() {		
 		m_pLog->AsyncWrite("Media Server destroyed", true, true);
 	};
@@ -74,6 +81,13 @@ private:
 public:	
 	
 	CMJPEGMediaServer(double scale);
+	~CMJPEGMediaServer();
+
+	CMJPEGMediaServer(CMJPEGMediaServer&&) = delete;
+	CMJPEGMediaServer& operator=(const CMJPEGMediaServer&) = delete;
+	CMJPEGMediaServer& operator=(CMJPEGMediaServer&&) = delete;
+
+	/*
 	~CMJPEGMediaServer() {		
 		m_IsRunning.store(false);
 		m_cv.notify_one();
@@ -81,7 +95,7 @@ public:
 			m_thread.join();
 		release();		
 	};
-
+	*/
 	int putFrame(const cv::Mat frame);
 	int Write(const cv::Mat& frame);
 

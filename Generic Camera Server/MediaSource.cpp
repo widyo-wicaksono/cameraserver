@@ -18,7 +18,7 @@ CBaseMediaSource::CBaseMediaSource(int width, int height, bool is_landscape) :m_
 	m_error_count.store(0, std::memory_order_relaxed);
 }
 
-
+/*
 std::string CBaseMediaSource::GetID() {
 	return m_id;
 }
@@ -30,7 +30,7 @@ CBaseMediaSource::SourceType CBaseMediaSource::GetType() {
 int CBaseMediaSource::GetState() {	
 	return m_state.load(std::memory_order_relaxed);
 }
-
+*/
 /*
 int CBaseMediaSource::GetError() {
 	return m_error_code.load();

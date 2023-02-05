@@ -35,10 +35,18 @@
 
 
 class CBaseMediaSource {
-public:	
+public:
 	enum class SourceType { dummy, webcam, dslr, mobile, ipcam };
 
 protected:
+	CBaseMediaSource();
+	CBaseMediaSource(int width, int height, bool is_landscape);
+
+	CBaseMediaSource(const CBaseMediaSource&) = delete;
+	CBaseMediaSource(CBaseMediaSource&&) = delete;
+	CBaseMediaSource& operator=(const CBaseMediaSource&) = delete;
+	CBaseMediaSource& operator=(CBaseMediaSource&&) = delete;
+
 	struct CommandData {
 		std::vector<cv::Mat> frames;
 		void* pConnection = nullptr;
@@ -59,8 +67,8 @@ protected:
 
 	std::mutex m_framelock;
 	std::mutex m_result_buffer_lock;
-	
-	std::string m_id="";
+
+	std::string m_id = "";
 
 	bool m_isLiveViewOn = false;
 
@@ -68,29 +76,27 @@ protected:
 	int m_lv_height = 720;
 	bool m_is_lv_landscape = true;
 
-	SourceType m_type = SourceType::dummy;	
+	SourceType m_type = SourceType::dummy;
 
 	void SetError(int code_);
 
-public:		
-
-	CBaseMediaSource();
-	CBaseMediaSource(int width, int height, bool is_landscape);
+public:
 
 	virtual ~CBaseMediaSource() {};
 	virtual int StartLiveView() { return 0; };
 	virtual void StopLiveView();
 	virtual int GrabMostRecentFrame(cv::Mat& frame);// { return 0; };
-	virtual int CapturePhoto(cv::Mat& frame) =0;	
+	virtual int CapturePhoto(cv::Mat& frame) = 0;
 	virtual int CaptureContinuousPhoto(std::vector<cv::Mat>& frames, int count) { return 0; };
 	virtual int CaptureBurstPhoto(std::vector<cv::Mat>& framaes, int duration, int count) { return 0; };
 	virtual int GetPhoto(cv::Mat& frame, std::string& path) { return 0; };
 	virtual int GetPhotos(std::vector<cv::Mat>& frame, std::vector<std::string>& paths) { return 0; };
 
-	std::string GetID();
-	SourceType GetType();	
+	inline std::string GetID() { return m_id; };
+	inline SourceType GetType(){return m_type;};
 		
-	virtual int GetState();	
+	virtual int GetState() { return m_state.load(std::memory_order_relaxed); };
+
 	virtual void GetError(int& error_code, int& error_count);
 	virtual void ResetError() {
 		m_error_code.store(ERR_NONE);

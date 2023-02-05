@@ -1,10 +1,24 @@
 #include "pch.h"
 #include "MediaServer.h"
 
+CBaseMediaServer::CBaseMediaServer(double scale) {
+	m_pLog = CLogManager::getInstance();
+	m_scale = scale;
+	m_pLog->AsyncWrite("Media Server created", true, true);
+}
+
 CMJPEGMediaServer::CMJPEGMediaServer(double scale) :CBaseMediaServer(scale) {
 	FD_ZERO(&m_master);		
-	m_IsRunning.store(true);
+	m_IsRunning.store(true, std::memory_order_relaxed);
 }
+
+CMJPEGMediaServer::~CMJPEGMediaServer() {
+	m_IsRunning.store(false, std::memory_order_relaxed);
+	m_cv.notify_one();
+	if (m_thread.joinable())
+		m_thread.join();
+	release();
+};
 
 int CMJPEGMediaServer::Init(int port) {
 	m_port = port;
