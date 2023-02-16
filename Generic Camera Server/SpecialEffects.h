@@ -119,7 +119,8 @@ private:
 	std::mutex m_framelock;
 	std::thread m_liveview_thread;
 
-	std::vector<cv::Mat> m_frame_buffer;
+	//std::vector<cv::Mat> m_frame_buffer;
+	std::list<cv::Mat> m_frame_buffer;
 
 	bool m_is_static = true;
 	bool m_is_repeat = false;
@@ -167,7 +168,8 @@ private:
 	std::mutex m_framelock;
 	std::string m_filename;
 
-	std::vector<cv::Mat> m_frame_buffer;
+	//std::vector<cv::Mat> m_frame_buffer;
+	std::list<cv::Mat> m_frame_buffer;
 
 	int m_R_low = 0;
 	int m_G_low = 1;
@@ -255,6 +257,10 @@ private:
 
 	std::vector<LANDMARK> m_landmarks;	
 	std::vector<LANDMARK> m_output_landmarks;
+
+	//std::list<LANDMARK> m_landmarks;
+	//std::list<LANDMARK> m_output_landmarks;
+
 	cv::Mat m_overlay;
 	cv::Mat m_last_frame;
 
@@ -275,6 +281,7 @@ public:
 
 	int FnDetectionThread(cv::Mat frame);
 	int DetectFaceNonThreaded(cv::Mat& frame, std::vector<LANDMARK>& outputs);
+	//int DetectFaceNonThreaded(cv::Mat& frame, std::list<LANDMARK>& outputs);
 	int filter(cv::Mat& frame);
 
 	void overlayImage(const cv::Mat &background, const cv::Mat &foreground, cv::Mat &output, cv::Point2i location);

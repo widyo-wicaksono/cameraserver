@@ -477,12 +477,23 @@ void CDynamicFrame::FnLiveViewThread() {
 
 int CDynamicFrame::GrabMostRecentFrame(cv::Mat& frame) {
 	int ret = -1;
-	m_framelock.lock();
+	/*m_framelock.lock();
 	if (m_frame_buffer.size() > 0) {		
 		frame = m_frame_buffer[m_frame_buffer.size() - 1];
 		ret = 0;
 	}
 	m_framelock.unlock();
+*/
+	try {
+		std::lock_guard<std::mutex> guard_l(m_framelock);
+		if (m_frame_buffer.size() > 0) {
+			frame = m_frame_buffer.back();
+			ret = 0;
+		}
+	}
+	catch (...) {
+		//log
+	}
 	return ret;
 }
 
@@ -622,12 +633,23 @@ CBackGorundRemoval::CBackGorundRemoval(const char* name, bool is_static, bool is
 
 int CBackGorundRemoval::GrabMostRecentFrame(cv::Mat& frame) {
 	int ret = -1;
+	/*
 	m_framelock.lock();
 	if (m_frame_buffer.size() > 0) {
 		frame = m_frame_buffer[m_frame_buffer.size() - 1];
 		ret = 0;
 	}
-	m_framelock.unlock();
+	m_framelock.unlock();*/
+	try {
+		std::lock_guard < std::mutex > guard_l(m_framelock);
+		if (m_frame_buffer.size() > 0) {
+			frame = m_frame_buffer.back();
+			ret = 0;
+		}
+	}
+	catch (...) {
+		//log
+	}
 	return ret;
 }
 

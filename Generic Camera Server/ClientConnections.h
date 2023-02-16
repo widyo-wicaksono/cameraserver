@@ -27,18 +27,12 @@ public:
 	}
 protected:	
 	
-	//std::vector<_ConnectionMessage> m_inbound;
 	std::list<_ConnectionMessage> m_inbound;
-	//std::vector<_ConnectionMessage> m_outbound;
 	std::list<_ConnectionMessage> m_outbound;
-	//std::vector<_ConnectionMessage> m_internal_connection_list;
 	std::list<_ConnectionMessage> m_internal_connection_list;
 
-	//std::vector<void*> m_new_connections;
 	std::list<void*> m_new_connections;
-	//std::vector<void*> m_disconnected_connections;
 	std::list<void*> m_disconnected_connections;
-	
 	
 	std::thread  m_thread;
 	
@@ -80,9 +74,7 @@ private:
 	struct lws_context_creation_info m_info;
 	struct lws_context* m_pcontext;	
 
-	//std::vector<_ConnectionMessage> m_outbound_data_buffer;
 	std::list<_ConnectionMessage> m_outbound_data_buffer;
-	//std::vector<_ConnectionMessage> m_inbound_data_buffer;
 	std::list<_ConnectionMessage> m_inbound_data_buffer;
 	
 protected:

@@ -48,13 +48,15 @@ protected:
 	CBaseMediaSource& operator=(CBaseMediaSource&&) = delete;
 
 	struct CommandData {
-		std::vector<cv::Mat> frames;
+		//std::vector<cv::Mat> frames;
+		std::list<cv::Mat> frames;
 		void* pConnection = nullptr;
 	};
 
 	std::list<cv::Mat> m_frame_buffer;
 
-	std::vector<CommandData> m_op_res;
+	//std::vector<CommandData> m_op_res;
+	std::list<CommandData> m_op_res;
 
 	CLogManager* m_pLog = nullptr;
 

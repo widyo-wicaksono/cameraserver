@@ -11,25 +11,11 @@ int CBaseServer::AsyncGetMessage(_ConnectionMessage& message) {
 	int ret = -1;
 	try {
 		std::lock_guard<std::mutex> guard_l(m_outbound_lock);
-		//m_inbound_lock.lock();
 		if (m_inbound.size() > 0) {
 			bool isFound = false;
 			int index = 0;
 			std::list<_ConnectionMessage>::iterator it;
-			/*
-			while (index < (int)m_inbound.size()) {
-				if (message.lp_connection == m_inbound[index].lp_connection) {
-					isFound = true;
-					break;
-				}
-				index++;
-			}
-			if (isFound) {
-				message = m_inbound[index];
-				m_inbound.erase(m_inbound.begin() + index);
-				ret = 0;
-			}
-			*/
+			
 			for (it = m_inbound.begin(); it != m_inbound.end(); ++it) {
 				if (message.lp_connection == it->lp_connection) {
 					isFound = true;
@@ -42,7 +28,6 @@ int CBaseServer::AsyncGetMessage(_ConnectionMessage& message) {
 				ret = 0;
 			}
 		}
-		//m_inbound_lock.unlock();
 	}
 	catch (...) {
 		//log something
@@ -69,7 +54,6 @@ bool CBaseServer::AsyncGetNewConnection(void** lp_connection) {
 	try {
 		std::lock_guard<std::mutex> guard_l(m_connection_lock);
 		if (m_new_connections.size() > 0) {
-			//*lp_connection = m_new_connections[0];
 			*lp_connection = *m_new_connections.begin();
 			m_new_connections.erase(m_new_connections.begin());
 			ret = true;
@@ -88,7 +72,6 @@ bool CBaseServer::AsyncGetDisconnectedConnection(void** lp_connection) {
 	try {
 		std::lock_guard<std::mutex> guard_l(m_connection_lock);
 		if (m_disconnected_connections.size() > 0) {
-			//*lp_connection = m_disconnected_connections[0];
 			*lp_connection = &*m_disconnected_connections.begin();
 			m_disconnected_connections.erase(m_disconnected_connections.begin());
 			ret = true;
@@ -122,14 +105,7 @@ void CBaseServer::AsyncAddDisconnectedConnection(void* p) {
 	catch (...) {
 		//log something
 	}
-	/*
-	for (int i = 0; i < (int)m_internal_connection_list.size(); i++) {
-		if(m_internal_connection_list[i].lp_connection==p){
-			m_internal_connection_list.erase(m_internal_connection_list.begin() + i);
-			break;
-		}
-	}
-	*/
+	
 	for (auto it= m_internal_connection_list.begin();it!=m_internal_connection_list.end(); ++it) {
 		if (it->lp_connection == p) {
 			m_internal_connection_list.erase(it);
@@ -312,15 +288,7 @@ bool CWSServer::AsyncGetMessageFromQueue(_ConnectionMessage& message) {
 	
 	try {
 		std::lock_guard<std::mutex> guard_l(m_outbound_lock);
-		/*
-		if (m_outbound.size() > 0) {
-			message.lp_connection = m_outbound[0].lp_connection;
-			message.data = m_outbound[0].data;
-			message.flow = m_outbound[0].flow;
-			m_outbound.erase(m_outbound.begin());
-			ret = true;
-		}
-		*/
+		
 		if (m_outbound.size() > 0) {
 			message.lp_connection = m_outbound.begin()->lp_connection;
 			message.data = m_outbound.begin()->data;
@@ -338,24 +306,8 @@ bool CWSServer::AsyncGetMessageFromQueue(_ConnectionMessage& message) {
 
 int CWSServer::SendDataToClientIfAvalable(struct lws * wsi) {
 	bool bIsFound = false;
-	//int index = 0;	
 	std::string buffer_to_send;
-	/*
-	if (m_outbound_data_buffer.size() > 0) {
-		while (index < (int)m_outbound_data_buffer.size()) {
-			if (wsi == (struct lws*)m_outbound_data_buffer[index].lp_connection) {
-				bIsFound = true;
-				break;
-			}
-			index++;
-		}
-		if (bIsFound) {
-			buffer_to_send = m_outbound_data_buffer[index].data;
-			m_outbound_data_buffer.erase(m_outbound_data_buffer.begin() + index);			
-		}
-	}
-	*/
-
+	
 	if (m_outbound_data_buffer.size() > 0) {
 		std::list<_ConnectionMessage>::iterator it;
 		for (it = m_outbound_data_buffer.begin(); it != m_outbound_data_buffer.end();++it) {
@@ -384,22 +336,12 @@ int CWSServer::SendDataToClientIfAvalable(struct lws * wsi) {
 
 int CWSServer::UploadDataToControlIfAvalable(struct lws * wsi, std::string& data) {
 	bool bIsFound = false;
-	//int index = 0;
 	
 	m_pLog->AsyncWrite(data.c_str(), true, false);
-	/*if (m_inbound_data_buffer.size() > 0) {
-		while (index < (int)m_inbound_data_buffer.size()) {
-			if (wsi == (struct lws*)m_inbound_data_buffer[index].lp_connection) {
-				bIsFound = true;
-				break;
-			}
-			index++;
-		}
-	}	*/
+	
 	std::list<_ConnectionMessage>::iterator it;
 	if (m_inbound_data_buffer.size() > 0) {
 		for (it = m_inbound_data_buffer.begin(); it != m_inbound_data_buffer.end();++it) {
-			//if (wsi == (struct lws*)m_inbound_data_buffer[index].lp_connection) {
 			if (wsi == (struct lws*)it->lp_connection) {
 				bIsFound = true;
 				break;
@@ -412,29 +354,19 @@ int CWSServer::UploadDataToControlIfAvalable(struct lws * wsi, std::string& data
 		it = m_inbound_data_buffer.end();
 		--it;
 	}
-	//m_inbound_data_buffer[index].data = m_inbound_data_buffer[index].data + data;
 	it->data = it->data + data;
 	size_t remaining = lws_remaining_packet_payload(wsi);
 	if (!remaining && lws_is_final_fragment(wsi)) {
 
 		rapidjson::Document document;
-		//std::string data = m_inbound_data_buffer[index].data;
 		std::string data = it->data;
 		document.Parse(data.c_str());
 		std::string command = document["command"].GetString();
 		if (command == "broadcast") {
 			std::string tmp = "Broadcasting :" + data;
 			m_pLog->AsyncWrite(tmp.c_str(), true, true);
-			//m_inbound_data_buffer.erase(m_inbound_data_buffer.begin() + index);
 			m_inbound_data_buffer.erase(it);
-			/*
-			for (int i = 0; i < (int)m_internal_connection_list.size(); i++) {
-				if (m_internal_connection_list[i].lp_connection != (void*)wsi) {
-					m_internal_connection_list[i].data = data;
-					lws_callback_on_writable((struct lws*)m_internal_connection_list[i].lp_connection);
-				}
-			}
-			*/
+			
 			for (auto it = m_internal_connection_list.begin(); it != m_internal_connection_list.end(); ++it) {
 				if (it->lp_connection != (void*)wsi) {
 					it->data = data;
@@ -445,10 +377,8 @@ int CWSServer::UploadDataToControlIfAvalable(struct lws * wsi, std::string& data
 			return 0;
 		}
 
-		//_ConnectionMessage message(_ConnectionMessage::DataDirection::inbound, (void*)wsi, m_inbound_data_buffer[index].data);
 		_ConnectionMessage message(_ConnectionMessage::DataDirection::inbound, (void*)wsi, it->data);
 		AsyncAddMessageToQueue(message);
-		//m_inbound_data_buffer.erase(m_inbound_data_buffer.begin() + index);
 		m_inbound_data_buffer.erase(it);
 	}
 	else
