@@ -62,15 +62,15 @@ public:
 	};
 	
 	virtual int filter(cv::Mat& frame) = 0;
-
-	std::string GetName() { return m_name; };
 	void SetName(const std::string& name) { m_name = name; };
 
-	inline int GetStackIndex() {
+	inline std::string GetName() const { return m_name; };
+	
+	inline int GetStackIndex() const {
 		return m_stack_effect_index;
 	};
 
-	inline int GetError() {
+	inline int GetError() const {
 		return m_error_code.load(std::memory_order_relaxed);
 	};
 	inline void ResetError() {
@@ -152,7 +152,7 @@ public:
 
 	int filter(cv::Mat& frame);
 	int GrabMostRecentFrame(cv::Mat& frame);
-	int GetLoopState() {
+	inline int GetLoopState() const {
 		return m_state.load();
 	}
 	void FnLiveViewThread();
